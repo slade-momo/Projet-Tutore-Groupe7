@@ -722,3 +722,19 @@ class CustomLogoutView(LogoutView):
     """Vue de déconnexion personnalisée"""
     next_page = reverse_lazy('login')
 
+#===================== VUES PRÉDICTION DE STOCK ====================
+from .services import StockAnalyticsService
+
+def stock_prediction_view(request):
+    # Appel du service (ici on laisse le service simuler ou on passe des données)
+    # Pour passer tes vraies données : data = [{'ds': '2025-01-01', 'y': 41000}, ...]
+    results = StockAnalyticsService.process_forecast()
+    
+    context = {
+        'forecast': results['full_data'],
+        'precision': results['precision'],
+        'current_stock': results['current_stock'],
+        'capacite_max': results['capacite_max'],
+        'seuil_critique': results['seuil_critique'],
+    }
+    return render(request, 'gestion/prediction/prediction.html', context)
