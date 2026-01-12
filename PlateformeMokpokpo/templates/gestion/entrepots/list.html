@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Entrepôts - Plateforme de Gestion{% endblock %}
+{% block page_title %}Gestion des Entrepôts{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Entrepôts{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex gap-2">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher par nom..." value="{{ search_query }}">
+                <select name="statut" class="form-select" style="max-width: 150px;">
+                    <option value="">Tous les statuts</option>
+                    {% for statut in statuts %}
+                    <option value="{{ statut }}">{{ statut }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'entrepots_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nouvel Entrepôt
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Liste des Entrepôts ({{ entrepots|length }})
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Localisation</th>
+                        <th>Responsable</th>
+                        <th>Capacité</th>
+                        <th>Stock Disponible</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if entrepots %}
+                        {% for entrepot in entrepots %}
+                        <tr>
+                            <td><strong>{{ entrepot.nom }}</strong></td>
+                            <td>{{ entrepot.localisation }}</td>
+                            <td>{{ entrepot.responsable }}</td>
+                            <td>{{ entrepot.capacite_max }}</td>
+                            <td>{{ entrepot.quantite_disponible }}</td>
+                            <td><span class="badge {% if entrepot.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">{{ entrepot.statut }}</span></td>
+                            <td>
+                                <a href="{% url 'entrepots_detail' entrepot.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'entrepots_update' entrepot.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'entrepots_delete' entrepot.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox"></i> Aucun entrepôt trouvé
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

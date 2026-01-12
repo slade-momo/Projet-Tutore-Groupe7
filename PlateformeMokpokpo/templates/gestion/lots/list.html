@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Lots - Plateforme de Gestion{% endblock %}
+{% block page_title %}Gestion des Lots{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Lots{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex gap-2">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher par code lot..." value="{{ search_query }}">
+                <select name="etat" class="form-select" style="max-width: 150px;">
+                    <option value="">Tous les états</option>
+                    {% for etat in etats %}
+                    <option value="{{ etat }}">{{ etat }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'lots_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nouveau Lot
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-cubes"></i> Liste des Lots ({{ lots|length }})
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Code Lot</th>
+                        <th>Produit</th>
+                        <th>Producteur</th>
+                        <th>Quantité</th>
+                        <th>État</th>
+                        <th>Expiration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if lots %}
+                        {% for lot in lots %}
+                        <tr>
+                            <td><strong>{{ lot.code_lot }}</strong></td>
+                            <td>{{ lot.produit.nom }}</td>
+                            <td>{{ lot.producteur.nom }}</td>
+                            <td>{{ lot.quantite_restante }}</td>
+                            <td><span class="badge bg-warning">{{ lot.etat }}</span></td>
+                            <td>{{ lot.date_expiration|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'lots_detail' lot.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'lots_update' lot.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'lots_delete' lot.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox"></i> Aucun lot trouvé
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Clients{% endblock %}
+{% block page_title %}Gestion des Clients{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Tableau de bord</a> > Clients{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <form method="get" class="d-flex gap-2" style="max-width: 400px;">
+                        <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <a href="{% url 'clients_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouveau Client
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prenom</th>
+                        <th>Entreprise</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Date d'inscription</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td><strong>{{ client.nom }}</strong></td>
+                        <td>{{ client.prenom|default:"-" }}</td>
+                        <td>{{ client.entreprise|default:"-" }}</td>
+                        <td>{{ client.email|default:"-" }}</td>
+                        <td>{{ client.telephone|default:"-" }}</td>
+                        <td>{{ client.date_inscription|date:"d/m/Y"|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'clients_detail' client.id %}" class="btn btn-sm btn-info" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'clients_update' client.id %}" class="btn btn-sm btn-warning" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'clients_delete' client.id %}" class="btn btn-sm btn-danger" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">Aucun client trouvé</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

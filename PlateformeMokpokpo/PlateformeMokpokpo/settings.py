@@ -57,10 +57,11 @@ ROOT_URLCONF = 'PlateformeMokpokpo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Ajoutez cette ligne
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -124,3 +125,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Configuration de l'authentification
+# settings.py
+
+# URL vers la page de login (utilisée par @login_required)
+LOGIN_URL = '/login/'
+
+# Où rediriger après une connexion réussie
+# (par exemple vers ton dashboard)
+LOGIN_REDIRECT_URL = '/'
+
+# Où rediriger après déconnexion
+LOGOUT_REDIRECT_URL = '/login/'

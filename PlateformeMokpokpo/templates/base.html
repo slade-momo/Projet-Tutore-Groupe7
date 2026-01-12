@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Plateforme de Gestion{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-color: #ecf0f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%);
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;           /* hauteur fixe = toute la fenêtre */
+            padding: 20px;
+            color: white;
+            overflow-y: auto;        /* permet le scroll vertical */
+        }
+
+        .sidebar .brand {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar .nav {
+            list-style: none;
+        }
+
+        .sidebar .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .top-navbar {
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .breadcrumbs {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 20px;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table thead {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .table thead th {
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            border: none;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            font-size: 14px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .stat-card .label {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            /* Option 1 : garder une sidebar scrollable aussi sur mobile */
+            .sidebar {
+                width: 220px;
+            }
+            .main-content {
+                margin-left: 220px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <i class="fas fa-warehouse"></i>
+            Gestion Stocks
+        </div>
+        <ul class="nav">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'clients_list' %}" class="nav-link {% if 'clients' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-users"></i> Clients
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'produits_list' %}" class="nav-link {% if 'produits' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-box"></i> Produits
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'producteurs_list' %}" class="nav-link {% if 'producteurs' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-seedling"></i> Producteurs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'lots_list' %}" class="nav-link {% if 'lots' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-cubes"></i> Lots
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'entrepots_list' %}" class="nav-link {% if 'entrepots' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-store"></i> Entrepôts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'zones_list' %}" class="nav-link {% if 'zones' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-th"></i> Zones
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'ventes_list' %}" class="nav-link {% if 'ventes' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-shopping-cart"></i> Ventes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'mouvements_list' %}" class="nav-link {% if 'mouvements' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-arrows-alt"></i> Mouvements
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'historique_list' %}" class="nav-link {% if 'historique' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-history"></i> Historique
+                </a>
+            </li>
+            <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 20px 0;">
+            <li class="nav-item">
+                <a href="/admin/" class="nav-link">
+                    <i class="fas fa-cog"></i> Admin Django
+                </a>
+            </li>
+            <li class="nav-item">
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link btn btn-link p-0">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                </form>
+
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h1 class="page-title">{% block page_title %}Plateforme de Gestion{% endblock %}</h1>
+                <div class="breadcrumbs">{% block breadcrumbs %}{% endblock %}</div>
+            </div>
+            <div class="user-info">
+                <span>{{ request.user.username }}</span>
+                <div class="user-avatar">
+                    {{ request.user.first_name|default:request.user.username|first|upper }}
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="container-fluid">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

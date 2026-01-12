@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entrepot.nom }} - Plateforme de Gestion{% endblock %}
+{% block page_title %}Entrepôt {{ entrepot.nom }}{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'entrepots_list' %}">Entrepôts</a> / Détail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i> Informations
+                </div>
+                <div class="card-body">
+                    <p><strong>Nom:</strong> {{ entrepot.nom }}</p>
+                    <p><strong>Localisation:</strong> {{ entrepot.localisation }}</p>
+                    <p><strong>Responsable:</strong> {{ entrepot.responsable }}</p>
+                    <p><strong>Capacité Max:</strong> {{ entrepot.capacite_max }}</p>
+                    <p><strong>Quantité Disponible:</strong> {{ entrepot.quantite_disponible }}</p>
+                    <p><strong>Seuil Critique:</strong> {{ entrepot.seuil_critique }}</p>
+                    <p><strong>Statut:</strong> 
+                        <span class="badge {% if entrepot.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ entrepot.statut }}
+                        </span>
+                    </p>
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{% url 'entrepots_update' entrepot.pk %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'entrepots_delete' entrepot.pk %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-th"></i> Zones de l'Entrepôt ({{ zones|length }})
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nom Zone</th>
+                                <th>Capacité</th>
+                                <th>Quantité</th>
+                                <th>Responsable</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if zones %}
+                                {% for zone in zones %}
+                                <tr>
+                                    <td><strong>{{ zone.nom }}</strong></td>
+                                    <td>{{ zone.capacite }}</td>
+                                    <td>{{ zone.quantite }}</td>
+                                    <td>{{ zone.responsable }}</td>
+                                    <td><span class="badge bg-info">{{ zone.statut }}</span></td>
+                                    <td>
+                                        <a href="{% url 'zones_update' zone.pk %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Aucune zone trouvée</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

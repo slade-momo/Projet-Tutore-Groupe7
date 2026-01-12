@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Plateforme de Gestion{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'producteurs_list' %}">Producteurs</a> / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-farmer"></i> {{ title }}
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.nom.label }}</label>
+                                {{ form.nom }}
+                                {% if form.nom.errors %}<small class="text-danger">{{ form.nom.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.prenom.label }}</label>
+                                {{ form.prenom }}
+                                {% if form.prenom.errors %}<small class="text-danger">{{ form.prenom.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.type_producteur.label }}</label>
+                                {{ form.type_producteur }}
+                                {% if form.type_producteur.errors %}<small class="text-danger">{{ form.type_producteur.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.statut.label }}</label>
+                                {{ form.statut }}
+                                {% if form.statut.errors %}<small class="text-danger">{{ form.statut.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.numero_identification.label }}</label>
+                                {{ form.numero_identification }}
+                                {% if form.numero_identification.errors %}<small class="text-danger">{{ form.numero_identification.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.telephone.label }}</label>
+                                {{ form.telephone }}
+                                {% if form.telephone.errors %}<small class="text-danger">{{ form.telephone.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.localisation.label }}</label>
+                            {{ form.localisation }}
+                            {% if form.localisation.errors %}<small class="text-danger">{{ form.localisation.errors.0 }}</small>{% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.observations.label }}</label>
+                            {{ form.observations }}
+                            {% if form.observations.errors %}<small class="text-danger">{{ form.observations.errors.0 }}</small>{% endif %}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'producteurs_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
