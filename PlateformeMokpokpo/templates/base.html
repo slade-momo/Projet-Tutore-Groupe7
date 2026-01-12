@@ -36,7 +36,7 @@
             position: fixed;
             left: 0;
             top: 0;
-            width: 280px;
+            width: 250px;
             height: 100vh;           /* hauteur fixe = toute la fenêtre */
             padding: 20px;
             color: white;
@@ -84,7 +84,7 @@
         }
 
         .main-content {
-            margin-left: 280px;
+            margin-left: 250px;
             padding: 20px;
             min-height: 100vh;
         }
@@ -310,11 +310,13 @@
             </li>
             <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 20px 0;">
             <li class="nav-item">
-                <a href="/admin/" class="nav-link">
-                    <i class="fas fa-cog"></i> Admin Django
-                </a>
+                {% if user.is_superuser %}
+                    <a href="/admin/" class="nav-link">
+                        <i class="fas fa-cog"></i> Admin Django
+                    </a>
+                {% endif %}
             </li>
-            <li class="nav-item">
+            <li class="nav-item" style="margin-left: 15px;">
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="nav-link btn btn-link p-0">
