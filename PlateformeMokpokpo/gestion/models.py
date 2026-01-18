@@ -15,6 +15,9 @@ class Clients(models.Model):
         db_table = 'clients'
         db_table_comment = 'Clients acheteurs'
 
+    def __str__(self):
+        return f"{self.nom} {self.prenom or ''}".strip()
+
 
 class Entrepots(models.Model):
     nom = models.CharField(max_length=100)
@@ -36,6 +39,9 @@ class Entrepots(models.Model):
     class Meta:
         db_table = 'entrepots'
         db_table_comment = 'Entrepôts de stockage'
+    
+    def __str__(self):
+        return self.nom
 
 
 class HistoriqueTracabilites(models.Model):
@@ -55,6 +61,8 @@ class HistoriqueTracabilites(models.Model):
         db_table = 'historique_tracabilites'
         db_table_comment = "Historique d'audit et traçabilité"
 
+    def __str__(self):
+        return f"{self.type_action} - {self.date_action.strftime('%Y-%m-%d %H:%M:%S')}"
 
 class Lots(models.Model):
     code_lot = models.CharField(unique=True, max_length=50)
@@ -78,6 +86,9 @@ class Lots(models.Model):
     class Meta:
         db_table = 'lots'
         db_table_comment = 'Lots de produits avec traçabilité'
+    
+    def __str__(self):
+        return f"{self.code_lot} - {self.produit.nom}"
 
 
 class MouvementStocks(models.Model):
@@ -105,6 +116,9 @@ class MouvementStocks(models.Model):
         db_table = 'mouvement_stocks'
         db_table_comment = 'Journal des mouvements de stock'
 
+    def __str__(self):
+        return f"{self.type_mouvement} - {self.lot.code_lot} - {self.quantite}"
+
 
 class Producteurs(models.Model):
     nom = models.CharField(max_length=100)
@@ -121,6 +135,9 @@ class Producteurs(models.Model):
         db_table = 'producteurs'
         db_table_comment = 'Producteurs de noix de cajou'
 
+    def __str__(self):
+        return f"{self.nom} {self.prenom or ''}".strip()
+
 
 class Produits(models.Model):
     nom = models.CharField(max_length=100)
@@ -132,6 +149,9 @@ class Produits(models.Model):
     class Meta:
         db_table = 'produits'
         db_table_comment = 'Catalogue des produits'
+    
+    def __str__(self):
+        return f"{self.nom} ({self.categorie})"
 
 
 class Ventes(models.Model):
@@ -153,6 +173,9 @@ class Ventes(models.Model):
     class Meta:
         db_table = 'ventes'
         db_table_comment = 'Ventes enregistrées'
+    
+    def __str__(self):
+        return f"{self.nom} - {self.produit.nom}"
 
 
 class ZoneEntrepots(models.Model):
@@ -174,3 +197,6 @@ class ZoneEntrepots(models.Model):
         db_table = 'zone_entrepots'
         unique_together = (('nom', 'entrepot'),)
         db_table_comment = "Zones à l'intérieur des entrepôts"
+    
+    def __str__(self):
+        return f"{self.nom} ({self.entrepot.nom})"

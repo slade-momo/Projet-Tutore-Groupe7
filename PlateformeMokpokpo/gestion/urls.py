@@ -60,5 +60,5 @@ urlpatterns = [
     path('historique/', views.historique_list, name='historique_list'),
 
     # Prévisions de stock
-    path('predictions/', views.stock_prediction_view, name='stock_prediction'),
+    path('stock-forecast/', views.stock_forecast_view, name='stock_prediction'),
 ]

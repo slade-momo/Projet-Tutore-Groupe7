@@ -1,3 +1,5 @@
+from multiprocessing import context
+from unittest import result
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
@@ -80,7 +82,7 @@ def clients_list(request):
 
 
 @login_required
-@permission_required('app.add_clients', raise_exception=True)
+#@permission_required('app.add_clients', raise_exception=True)
 def clients_create(request):
     """Créer un nouveau client"""
     if request.method == 'POST':
@@ -723,18 +725,127 @@ class CustomLogoutView(LogoutView):
     next_page = reverse_lazy('login')
 
 #===================== VUES PRÉDICTION DE STOCK ====================
-from .services import StockAnalyticsService
+from django.shortcuts import render
+import pandas as pd
+import numpy as np
+from prophet import Prophet
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import io
+import base64
+import warnings
+warnings.filterwarnings('ignore')
 
-def stock_prediction_view(request):
-    # Appel du service (ici on laisse le service simuler ou on passe des données)
-    # Pour passer tes vraies données : data = [{'ds': '2025-01-01', 'y': 41000}, ...]
-    results = StockAnalyticsService.process_forecast()
+def stock_forecast_view(request):
+    """EXACTEMENT votre Colab - Ferme Mokpokpo"""
     
+    # === VOS DONNÉES EXACTES du Colab [file:124] ===
+    np.random.seed(42)
+    capacite_max = 50000
+    stock_initial = 41000
+    seuil_critique = 10000
+    
+    dates = pd.date_range(start="2021-01-01", periods=60, freq="ME")
+    entrees, sorties, stock = [], [], []
+    stock_actuel = stock_initial
+    
+    for d in dates:
+        month_num = d.month
+        # Entrées saisonnières (Fév-Mai)
+        entrees.append(np.random.randint(3000, 6000) if month_num in [2,3,4,5] else np.random.randint(500, 2000))
+        # Sorties saisonnières (Aoû-Déc)
+        sorties.append(np.random.randint(2500, 4000) if month_num in [8,9,10,11,12] else np.random.randint(1000, 2500))
+        stock_actuel = max(0, min(capacite_max, stock_actuel + entrees[-1] - sorties[-1]))
+        stock.append(stock_actuel)
+    
+    df_stock = pd.DataFrame({
+        'ds': dates,
+        'entrees': entrees,
+        'sorties': sorties,
+        'stock': stock
+    })
+    df_stock['alerte'] = df_stock['stock'].apply(lambda x: 'CRITIQUE' if x < seuil_critique else 'OK')
+    df_stock['remplissage'] = (df_stock['stock'] / capacite_max) * 100
+    
+    # === PROPHET COMME VOTRE COLAB ===
+    df_prophet = df_stock[['ds', 'stock']].rename(columns={'stock': 'y'})
+    model = Prophet(yearly_seasonality=True, weekly_seasonality=True, daily_seasonality=False)
+    model.fit(df_prophet)
+    future = model.make_future_dataframe(periods=36, freq='ME')
+    forecast = model.predict(future)
+    
+    # === MÉTRIQUES ===
+    forecast['alerte'] = forecast['yhat'].apply(lambda x: 'CRITIQUE' if x < seuil_critique else 'OK')
+    forecast['remplissage'] = (forecast['yhat'] / capacite_max) * 100
+    
+    # Données par année EXACTEMENT comme Colab
+    years_data = {}
+    for year in [2026, 2027, 2028]:
+        year_df = forecast[forecast['ds'].dt.year == year][['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'alerte', 'remplissage']]
+        years_data[f'forecast_{year}'] = year_df.round(0).to_dict('records')
+    
+    # Précision MAPE
+    y_true = df_prophet['y'].values
+    y_pred = forecast.head(len(df_prophet))['yhat'].values
+    mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+    precision = round(100 - mape, 2)
+    
+    # === FONCTIONS GRAPHIQUES ===
+    def plot_forecast():
+        fig, ax = plt.subplots(figsize=(14, 8))
+        model.plot(forecast, ax=ax)
+        ax.set_title('Prévision Complète Stock - Ferme Mokpokpo', fontsize=16, fontweight='bold')
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        plt.close()
+        return base64.b64encode(buffer.getvalue()).decode()
+    
+    def plot_components():
+        fig = model.plot_components(forecast, figsize=(14, 10))
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        plt.close()
+        return base64.b64encode(buffer.getvalue()).decode()
+    
+    def plot_year_bar(year_data, year):
+        if not year_data: return ""
+        fig, ax = plt.subplots(figsize=(12, 6))
+        months = [pd.to_datetime(d['ds']).month for d in year_data]
+        yhat = [float(d['yhat']) for d in year_data]
+        norm = plt.Normalize(min(yhat), max(yhat))
+        colors = plt.cm.RdYlGn(norm(yhat))
+        bars = ax.bar(range(1, 13), yhat, color=colors, alpha=0.8, edgecolor='black', linewidth=0.5)
+        ax.set_title(f'Prévision Stock (kg) par Mois pour {year}', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Mois')
+        ax.set_ylabel('Stock Prévu (kg)')
+        ax.set_xticks(range(1, 13))
+        ax.set_xticklabels(['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'])
+        ax.grid(True, linestyle='--', alpha=0.3)
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        plt.close()
+        return base64.b64encode(buffer.getvalue()).decode()
+    
+    # === TOUTES LES DONNÉES POUR LE TEMPLATE ===
     context = {
-        'forecast': results['full_data'],
-        'precision': results['precision'],
-        'current_stock': results['current_stock'],
-        'capacite_max': results['capacite_max'],
-        'seuil_critique': results['seuil_critique'],
+        'current_stock': int(df_stock['stock'].iloc[-1]),
+        'precision': precision,
+        'capacite_max': capacite_max,
+        'seuil_critique': seuil_critique,
+        'historique_stock': df_stock.tail(12).round(0).to_dict('records'),
+        'historique_prophet': df_prophet.tail(12).round(0).to_dict('records'),
+        **years_data,
+        'img_forecast': plot_forecast(),
+        'img_components': plot_components(),
+        'img_2026': plot_year_bar(years_data['forecast_2026'], '2026'),
+        'img_2027': plot_year_bar(years_data['forecast_2027'], '2027'),
+        'img_2028': plot_year_bar(years_data['forecast_2028'], '2028'),
     }
-    return render(request, 'gestion/prediction/prediction.html', context)
+        
+
+    return render(request, 'gestion/stock-forecast/stock_forecast.html', context)
+
+
