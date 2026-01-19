@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.nom }} {{ client.prenom }}{% endblock %}
+{% block page_title %}Détail Client - {{ client.nom }}{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Tableau de bord</a> > <a href="{% url 'clients_list' %}">Clients</a> > {{ client.nom }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div></div>
+                <div>
+                    <a href="{% url 'clients_update' client.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <a href="{% url 'clients_delete' client.id %}" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user"></i> Informations
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Nom:</strong> {{ client.nom }} {{ client.prenom|default:"" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Entreprise:</strong> {{ client.entreprise|default:"-" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Email:</strong> {{ client.email|default:"-" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Téléphone:</strong> {{ client.telephone|default:"-" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Adresse:</strong> {{ client.adresse|default:"-" }}
+                    </div>
+                    <div>
+                        <strong>Date d'inscription:</strong> {{ client.date_inscription|date:"d/m/Y"|default:"-" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-shopping-cart"></i> Ventes du Client ({{ ventes.count }})
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Lot</th>
+                                <th>Quantité</th>
+                                <th>Montant</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vente in ventes %}
+                            <tr>
+                                <td>{{ vente.numero_vente }}</td>
+                                <td><a href="{% url 'lots_detail' vente.lot.id %}">{{ vente.lot.code_lot }}</a></td>
+                                <td>{{ vente.quantite_vendue }}</td>
+                                <td>{{ vente.montant_total }} XOF</td>
+                                <td>{{ vente.date_vente|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Aucune vente</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Résumé</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <div class="number">{{ ventes.count }}</div>
+                                <div class="label">Nombre de ventes</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <div class="number">{{ total_achats }}</div>
+                                <div class="label">Total dépensé (XOF)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

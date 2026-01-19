@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Plateforme de Gestion{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'lots_list' %}">Lots</a> / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cube"></i> {{ title }}
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.code_lot.label }}</label>
+                                {{ form.code_lot }}
+                                {% if form.code_lot.errors %}<small class="text-danger">{{ form.code_lot.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.produit.label }}</label>
+                                {{ form.produit }}
+                                {% if form.produit.errors %}<small class="text-danger">{{ form.produit.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.producteur.label }}</label>
+                                {{ form.producteur }}
+                                {% if form.producteur.errors %}<small class="text-danger">{{ form.producteur.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.zone.label }}</label>
+                                {{ form.zone }}
+                                {% if form.zone.errors %}<small class="text-danger">{{ form.zone.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">{{ form.quantite_initiale.label }}</label>
+                                {{ form.quantite_initiale }}
+                                {% if form.quantite_initiale.errors %}<small class="text-danger">{{ form.quantite_initiale.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">{{ form.quantite_restante.label }}</label>
+                                {{ form.quantite_restante }}
+                                {% if form.quantite_restante.errors %}<small class="text-danger">{{ form.quantite_restante.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">{{ form.qualite.label }}</label>
+                                {{ form.qualite }}
+                                {% if form.qualite.errors %}<small class="text-danger">{{ form.qualite.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.etat.label }}</label>
+                                {{ form.etat }}
+                                {% if form.etat.errors %}<small class="text-danger">{{ form.etat.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.date_reception.label }}</label>
+                                {{ form.date_reception }}
+                                {% if form.date_reception.errors %}<small class="text-danger">{{ form.date_reception.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.date_expiration.label }}</label>
+                                {{ form.date_expiration }}
+                                {% if form.date_expiration.errors %}<small class="text-danger">{{ form.date_expiration.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.observations.label }}</label>
+                            {{ form.observations }}
+                            {% if form.observations.errors %}<small class="text-danger">{{ form.observations.errors.0 }}</small>{% endif %}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'lots_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

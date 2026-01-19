@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmer la suppression{% endblock %}
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmation de suppression
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">
+                        Êtes-vous sûr de vouloir supprimer cet élément ?
+                    </p>
+                    <div class="alert alert-warning">
+                        <strong>{{ object.nom }}</strong>
+                    </div>
+                    <p class="text-muted mb-4">
+                        Cette action est irréversible et supprimera définitivement l'enregistrement et toutes les données associées.
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Supprimer définitivement
+                            </button>
+                            <a href="javascript:history.back()" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

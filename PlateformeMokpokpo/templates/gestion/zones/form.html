@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Plateforme de Gestion{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'zones_list' %}">Zones</a> / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-th"></i> {{ title }}
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.nom.label }}</label>
+                                {{ form.nom }}
+                                {% if form.nom.errors %}<small class="text-danger">{{ form.nom.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.entrepot.label }}</label>
+                                {{ form.entrepot }}
+                                {% if form.entrepot.errors %}<small class="text-danger">{{ form.entrepot.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.capacite.label }}</label>
+                                {{ form.capacite }}
+                                {% if form.capacite.errors %}<small class="text-danger">{{ form.capacite.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.quantite.label }}</label>
+                                {{ form.quantite }}
+                                {% if form.quantite.errors %}<small class="text-danger">{{ form.quantite.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.responsable.label }}</label>
+                                {{ form.responsable }}
+                                {% if form.responsable.errors %}<small class="text-danger">{{ form.responsable.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.statut.label }}</label>
+                                {{ form.statut }}
+                                {% if form.statut.errors %}<small class="text-danger">{{ form.statut.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<small class="text-danger">{{ form.description.errors.0 }}</small>{% endif %}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'zones_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

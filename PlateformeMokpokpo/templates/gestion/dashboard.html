@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de Bord{% endblock %}
+{% block page_title %}Tableau de Bord{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Statistiques principales -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="number">{{ total_clients }}</div>
+                <div class="label">Clients</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="number">{{ total_produits }}</div>
+                <div class="label">Produits</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="number">{{ total_lots }}</div>
+                <div class="label">Lots</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="number">{{ total_ventes }}</div>
+                <div class="label">Ventes</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alertes importantes -->
+    <div class="row mb-4">
+        {% if lots_expires > 0 %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-exclamation-circle text-danger"></i> Lots Expirés
+                    </h5>
+                    <p class="card-text">
+                        {{ lots_expires }} lot(s) ont expiré. <a href="{% url 'lots_list' %}">Voir les lots</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if lots_expiration_proche > 0 %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-calendar-times text-warning"></i> Expiration Proche
+                    </h5>
+                    <p class="card-text">
+                        {{ lots_expiration_proche }} lot(s) expireront dans 30 jours. <a href="{% url 'lots_list' %}">Voir les lots</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if entrepots_alerte > 0 %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-warehouse text-info"></i> Entrepôts Alerte
+                    </h5>
+                    <p class="card-text">
+                        {{ entrepots_alerte }} entrepôt(s) sous le seuil critique. <a href="{% url 'entrepots_list' %}">Voir les entrepôts</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Dernieres activités -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-arrows-alt"></i> Derniers Mouvements
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Lot</th>
+                                <th>Quantité</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mouvement in derniers_mouvements %}
+                            <tr>
+                                <td>{{ mouvement.date_mouvement|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ mouvement.type_mouvement }}</span>
+                                </td>
+                                <td><a href="{% url 'lots_detail' mouvement.lot.id %}">{{ mouvement.lot.code_lot }}</a></td>
+                                <td>{{ mouvement.quantite }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Aucun mouvement</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-shopping-cart"></i> Dernières Ventes
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Client</th>
+                                <th>Montant</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vente in dernieres_ventes %}
+                            <tr>
+                                <td><a href="{% url 'ventes_list' %}">{{ vente.numero_vente }}</a></td>
+                                <td>{{ vente.client.nom|default:"N/A" }}</td>
+                                <td>{{ vente.montant_total }} XOF</td>
+                                <td>{{ vente.date_vente|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Aucune vente</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stock par zone -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-th"></i> Stock par Zone
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Zone</th>
+                                <th>Entrepôt</th>
+                                <th>Quantité</th>
+                                <th>Capacité</th>
+                                <th>Utilisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for zone in stock_par_zone %}
+                            <tr>
+                                <td>{{ zone.nom }}</td>
+                                <td>{{ zone.entrepot.nom }}</td>
+                                <td>{{ zone.quantite }}</td>
+                                <td>{{ zone.capacite }}</td>
+                                <td>
+                                    {% widthratio zone.quantite zone.capacite 100 as percentage %}
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ percentage }}%;" 
+                                             aria-valuenow="{{ percentage }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Aucune zone</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

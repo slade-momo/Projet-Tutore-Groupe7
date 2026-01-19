@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Produits - Plateforme de Gestion{% endblock %}
+{% block page_title %}Gestion des Produits{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Produits{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex gap-2">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher par nom..." value="{{ search_query }}">
+                <select name="categorie" class="form-select" style="max-width: 200px;">
+                    <option value="">Toutes les catégories</option>
+                    {% for categorie in categories %}
+                    <option value="{{ categorie }}">{{ categorie }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'produits_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nouveau Produit
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Liste des Produits ({{ produits|length }})
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Catégorie</th>
+                        <th>Unité</th>
+                        <th>Prix Unitaire</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if produits %}
+                        {% for produit in produits %}
+                        <tr>
+                            <td><strong>{{ produit.nom }}</strong></td>
+                            <td><span class="badge bg-info">{{ produit.categorie }}</span></td>
+                            <td>{{ produit.unite }}</td>
+                            <td class="text-success fw-bold">{{ produit.prix_unitaire }} DZD</td>
+                            <td>
+                                <a href="{% url 'produits_update' produit.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'produits_delete' produit.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox"></i> Aucun produit trouvé
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
