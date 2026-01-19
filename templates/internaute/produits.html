@@ -1,0 +1,124 @@
+{% extends 'internaute/base.html' %}
+{% load static %}
+{% block title %}Produits - Ferme Mokpokpo{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Nos produits de noix de cajou - Ferme Mokpokpo">
+{% endblock %}
+
+{% block content %}
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Nos Produits</h1>
+            <p>Découvrez notre sélection de noix de cajou premium</p>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products">
+        <div class="container">
+            <div class="products-grid">
+                <!-- Product Card 1 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{% static 'images/cajou_brute.jpeg' %}" alt="Noix de Cajou Brutes">
+                    </div>
+                    <div class="product-info">
+                        <h3>Noix de Cajou Brutes</h3>
+                        <p class="product-price">25 000 FCFA / kg</p>
+                        <p class="product-availability">✓ En stock</p>
+                        <p class="product-description">Noix de cajou brutes de haute qualité, directement de notre ferme. Produit naturel sans traitement.</p>
+                        <button class="btn btn-outline">En savoir plus</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 2 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{% static 'images/cajou_grille.jpeg' %}" alt="Noix de Cajou Grillées">
+                    </div>
+                    <div class="product-info">
+                        <h3>Noix de Cajou Grillées</h3>
+                        <p class="product-price">30 000 FCFA / kg</p>
+                        <p class="product-availability">✓ En stock</p>
+                        <p class="product-description">Noix de cajou grillées à la perfection, avec une saveur riche et délicieuse. Parfait pour la consommation.</p>
+                        <button class="btn btn-outline">En savoir plus</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 3 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{% static 'images/huille_cajou.jpg' %}" alt="Huile de Cajou">
+                    </div>
+                    <div class="product-info">
+                        <h3>Beurre de Cajou</h3>
+                        <p class="product-price">35 000 FCFA / 500g</p>
+                        <p class="product-availability">✓ En stock</p>
+                        <p class="product-description">Beurre de cajou naturel, riche en protéines et en nutriments. Idéal pour les petits déjeuners et collations.</p>
+                        <button class="btn btn-outline">En savoir plus</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 4 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{% static 'images/cajou_salee.jpeg' %}" alt="Noix de Cajou Salées">
+                    </div>
+                    <div class="product-info">
+                        <h3>Noix de Cajou Salées</h3>
+                        <p class="product-price">28 000 FCFA / kg</p>
+                        <p class="product-availability">✓ En stock</p>
+                        <p class="product-description">Noix de cajou grillées et légèrement salées pour un goût savoureux et équilibré.</p>
+                        <button class="btn btn-outline">En savoir plus</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 5 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{% static 'images/huille_cajou.jpg' %}" alt="Huile de Cajou">
+                    </div>
+                    <div class="product-info">
+                        <h3>Huile de Cajou</h3>
+                        <p class="product-price">40 000 FCFA / litre</p>
+                        <p class="product-availability">✓ En stock</p>
+                        <p class="product-description">Huile de cajou pressée à froid, riche en saveur et en acides gras bénéfiques.</p>
+                        <button class="btn btn-outline">En savoir plus</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 6 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{% static 'images/cajou_bio.jpeg' %}" alt="Noix de Cajou Biologique">
+                    </div>
+                    <div class="product-info">
+                        <h3>Noix de Cajou Biologique</h3>
+                        <p class="product-price">45 000 FCFA / kg</p>
+                        <p class="product-availability">✓ En stock</p>
+                        <p class="product-description">Noix de cajou certifiées biologiques, cultivées sans pesticides ni engrais synthétiques.</p>
+                        <button class="btn btn-outline">En savoir plus</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Intéressé par nos produits ?</h2>
+            <p>Contactez-nous pour connaître nos conditions de vente et tarifs pour les commandes en gros</p>
+            <a href="mailto:info@fermemokpokpo.com" class="btn btn-secondary">Nous contacter</a>
+        </div>
+    </section>
+
+    <!-- Script pour activer le lien de navigation actif -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('nav-produits').classList.add('active');
+        });
+    </script>
+{% endblock %}

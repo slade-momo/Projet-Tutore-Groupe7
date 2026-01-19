@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Plateforme de Gestion{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'mouvements_list' %}">Mouvements</a> / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-arrows-alt"></i> {{ title }}
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.type_mouvement.label }}</label>
+                                {{ form.type_mouvement }}
+                                {% if form.type_mouvement.errors %}<small class="text-danger">{{ form.type_mouvement.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.lot.label }}</label>
+                                {{ form.lot }}
+                                {% if form.lot.errors %}<small class="text-danger">{{ form.lot.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.quantite.label }}</label>
+                                {{ form.quantite }}
+                                {% if form.quantite.errors %}<small class="text-danger">{{ form.quantite.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.zone_origine.label }}</label>
+                                {{ form.zone_origine }}
+                                {% if form.zone_origine.errors %}<small class="text-danger">{{ form.zone_origine.errors.0 }}</small>{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.zone_destination.label }}</label>
+                                {{ form.zone_destination }}
+                                {% if form.zone_destination.errors %}<small class="text-danger">{{ form.zone_destination.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    {{ form.valide }}
+                                    <label class="form-check-label">{{ form.valide.label }}</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.motif.label }}</label>
+                            {{ form.motif }}
+                            {% if form.motif.errors %}<small class="text-danger">{{ form.motif.errors.0 }}</small>{% endif %}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            <a href="{% url 'mouvements_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

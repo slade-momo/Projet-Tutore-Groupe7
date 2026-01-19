@@ -1,0 +1,104 @@
+{% extends 'internaute/base.html' %}
+
+{% block title %}À Propos - Ferme Mokpokpo{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="À propos de Ferme Mokpokpo - Notre histoire et nos valeurs">
+{% endblock %}
+
+{% block content %}
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>À Propos de Nous</h1>
+            <p>Notre histoire, nos valeurs et notre engagement envers l'excellence</p>
+        </div>
+    </section>
+
+    <!-- About Content -->
+    <section class="about">
+        <div class="container">
+            <!-- Mission Section -->
+            <div class="about-section">
+                <div class="about-text">
+                    <h2>Notre Mission</h2>
+                    <p>Ferme Mokpokpo s'est engagée à fournir des noix de cajou de qualité exceptionnelle tout en respectant les pratiques agricoles durables et éthiques. Nous croyons que l'agriculture responsable est la clé pour construire un avenir prospère pour nos communautés et notre planète.</p>
+                </div>
+            </div>
+
+            <!-- Vision Section -->
+            <div class="about-section">
+                <div class="about-text">
+                    <h2>Notre Vision</h2>
+                    <p>Nous envisageons de devenir le leader régional en production de noix de cajou premium, reconnu pour notre engagement envers la qualité, la durabilité et l'excellence. Nous aspirons à créer des opportunités d'emploi et de croissance pour nos communautés locales.</p>
+                </div>
+            </div>
+
+            <!-- Values Section -->
+            <div class="values-grid">
+                <h2 style="grid-column: 1 / -1; text-align: center; margin-bottom: 2rem;">Nos Valeurs</h2>
+                <div class="value-card">
+                    <h3>Excellence</h3>
+                    <p>Nous nous engageons à atteindre les plus hauts standards de qualité dans chaque aspect de notre production.</p>
+                </div>
+                <div class="value-card">
+                    <h3>Intégrité</h3>
+                    <p>L'honnêteté et la transparence guident toutes nos relations commerciales et nos interactions.</p>
+                </div>
+                <div class="value-card">
+                    <h3>Durabilité</h3>
+                    <p>Nous protégeons l'environnement en utilisant des pratiques agricoles responsables et durables.</p>
+                </div>
+                <div class="value-card">
+                    <h3>Communauté</h3>
+                    <p>Nous soutienons le développement des communautés locales et créons des emplois significatifs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Farm Gallery Section -->
+    <section class="gallery">
+        <div class="container">
+            <h2>Nos Installations</h2>
+            <div class="gallery-grid">
+                <img src="/placeholder.svg?height=250&width=300" alt="Champ de cashew">
+                <img src="/placeholder.svg?height=250&width=300" alt="Récolte de cajou">
+                <img src="/placeholder.svg?height=250&width=300" alt="Unité de transformation">
+                <img src="/placeholder.svg?height=250&width=300" alt="Emballage des produits">
+            </div>
+        </div>
+    </section>
+
+    <!-- History Timeline -->
+    <section class="history">
+        <div class="container">
+            <h2>Notre Parcours</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h3>Fondation</h3>
+                    <p>Création de Ferme Mokpokpo avec la vision de produire les meilleures noix de cajou de la région.</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>Croissance</h3>
+                    <p>Expansion des opérations et augmentation de la capacité de production pour répondre à la demande croissante.</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>Innovation</h3>
+                    <p>Investissement dans les technologies modernes et les pratiques durables pour améliorer la qualité.</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>Excellence</h3>
+                    <p>Reconnaissance régionale pour nos efforts de qualité et notre engagement envers la durabilité.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Script pour activer le lien de navigation actif -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('nav-apropos').classList.add('active');
+        });
+    </script>
+{% endblock %}
