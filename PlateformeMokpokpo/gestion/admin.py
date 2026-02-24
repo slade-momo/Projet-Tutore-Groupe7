@@ -116,33 +116,30 @@ class ZoneEntrepotsAdmin(admin.ModelAdmin):
 
 @admin.register(Lots)
 class LotsAdmin(admin.ModelAdmin):
-    list_display = ('code_lot', 'produit', 'qualite', 'etat', 'quantite_restante', 'date_expiration')
-    list_filter = ('etat', 'qualite', 'date_reception', 'date_expiration')
+    list_display = ('code_lot', 'produit', 'qualite', 'get_etat_badge', 'quantite_restante', 'date_expiration')
+    list_filter = ('etat', 'qualite', 'date_reception', 'date_expiration')  # 'etat' maintenant filtrable
     search_fields = ('code_lot', 'produit__nom')
-    fieldsets = (
-        ('Identification', {
-            'fields': ('code_lot', 'produit', 'producteur')
-        }),
-        ('Quantités', {
-            'fields': ('quantite_initiale', 'quantite_restante')
-        }),
-        ('Qualité et État', {
-            'fields': ('qualite', 'etat')
-        }),
-        ('Localisation', {
-            'fields': ('zone',)
-        }),
-        ('Dates', {
-            'fields': ('date_reception', 'date_expiration', 'date_creation')
-        }),
-        ('Responsable', {
-            'fields': ('user',)
-        }),
-        ('Notes', {
-            'fields': ('observations',)
-        }),
-    )
-
+    
+    # Champ pour afficher l'état avec badge coloré
+    def get_etat_badge(self, obj):
+        if not obj.etat:
+            return format_html('<span style="background-color: gray; color: white; padding: 3px 8px; border-radius: 3px;">Non défini</span>')
+        
+        colors = {
+            'en_stock': 'green',
+            'reserve': 'orange', 
+            'en_transit': 'blue',
+            'expedie': 'purple',
+            'perdu': 'red',
+            'detruire': 'darkred',
+        }
+        color = colors.get(obj.etat, 'gray')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 3px; font-weight: bold;">{}</span>',
+            color, dict(obj.ETATS_CHOICES).get(obj.etat, obj.etat)
+        )
+    get_etat_badge.short_description = 'État'
+    
 
 @admin.register(MouvementStocks)
 class MouvementStocksAdmin(admin.ModelAdmin):

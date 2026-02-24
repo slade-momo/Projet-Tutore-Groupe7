@@ -39,7 +39,7 @@ class ProducteursForm(forms.ModelForm):
         widgets = {
             'nom': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom'}),
             'prenom': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Prénom'}),
-            'type_producteur': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Type de producteur'}),
+            'type_producteur': forms.Select(attrs={'class': 'form-control'}),
             'numero_identification': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Numéro d\'identification'}),
             'localisation': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Localisation'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Téléphone'}),
@@ -88,7 +88,7 @@ class LotsForm(forms.ModelForm):
             'producteur': forms.Select(attrs={'class': 'form-control'}),
             'quantite_initiale': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantité initiale', 'step': '0.01'}),
             'quantite_restante': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantité restante', 'step': '0.01'}),
-            'qualite': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Qualité'}),
+            'qualite': forms.Select(attrs={'class': 'form-control'}),
             'etat': forms.Select(attrs={'class': 'form-control'}),
             'date_reception': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'date_expiration': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),

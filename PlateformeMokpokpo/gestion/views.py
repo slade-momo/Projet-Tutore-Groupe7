@@ -1,5 +1,3 @@
-from multiprocessing import context
-from unittest import result
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
@@ -82,7 +80,7 @@ def clients_list(request):
 
 
 @login_required
-#@permission_required('app.add_clients', raise_exception=True)
+@permission_required('gestion.add_clients', raise_exception=True)
 def clients_create(request):
     """Créer un nouveau client"""
     if request.method == 'POST':
@@ -112,7 +110,7 @@ def clients_detail(request, pk):
 
 
 @login_required
-@permission_required('app.change_clients', raise_exception=True)
+@permission_required('gestion.change_clients', raise_exception=True)
 def clients_update(request, pk):
     """Modifier un client"""
     client = get_object_or_404(Clients, pk=pk)
@@ -129,7 +127,7 @@ def clients_update(request, pk):
 
 
 @login_required
-@permission_required('app.delete_clients', raise_exception=True)
+@permission_required('gestion.delete_clients', raise_exception=True)
 def clients_delete(request, pk):
     """Supprimer un client"""
     client = get_object_or_404(Clients, pk=pk)
@@ -168,7 +166,7 @@ def produits_list(request):
 
 
 @login_required
-@permission_required('app.add_produits', raise_exception=True)
+@permission_required('gestion.add_produits', raise_exception=True)
 def produits_create(request):
     """Créer un nouveau produit"""
     if request.method == 'POST':
@@ -184,7 +182,7 @@ def produits_create(request):
 
 
 @login_required
-@permission_required('app.change_produits', raise_exception=True)
+@permission_required('gestion.change_produits', raise_exception=True)
 def produits_update(request, pk):
     """Modifier un produit"""
     produit = get_object_or_404(Produits, pk=pk)
@@ -201,7 +199,7 @@ def produits_update(request, pk):
 
 
 @login_required
-@permission_required('app.delete_produits', raise_exception=True)
+@permission_required('gestion.delete_produits', raise_exception=True)
 def produits_delete(request, pk):
     """Supprimer un produit"""
     produit = get_object_or_404(Produits, pk=pk)
@@ -241,7 +239,7 @@ def producteurs_list(request):
 
 
 @login_required
-@permission_required('app.add_producteurs', raise_exception=True)
+@permission_required('gestion.add_producteurs', raise_exception=True)
 def producteurs_create(request):
     """Créer un nouveau producteur"""
     if request.method == 'POST':
@@ -271,7 +269,7 @@ def producteurs_detail(request, pk):
 
 
 @login_required
-@permission_required('app.change_producteurs', raise_exception=True)
+@permission_required('gestion.change_producteurs', raise_exception=True)
 def producteurs_update(request, pk):
     """Modifier un producteur"""
     producteur = get_object_or_404(Producteurs, pk=pk)
@@ -288,7 +286,7 @@ def producteurs_update(request, pk):
 
 
 @login_required
-@permission_required('app.delete_producteurs', raise_exception=True)
+@permission_required('gestion.delete_producteurs', raise_exception=True)
 def producteurs_delete(request, pk):
     """Supprimer un producteur"""
     producteur = get_object_or_404(Producteurs, pk=pk)
@@ -327,7 +325,7 @@ def entrepots_list(request):
 
 
 @login_required
-@permission_required('app.add_entrepots', raise_exception=True)
+@permission_required('gestion.add_entrepots', raise_exception=True)
 def entrepots_create(request):
     """Créer un nouvel entrepôt"""
     if request.method == 'POST':
@@ -357,7 +355,7 @@ def entrepots_detail(request, pk):
 
 
 @login_required
-@permission_required('app.change_entrepots', raise_exception=True)
+@permission_required('gestion.change_entrepots', raise_exception=True)
 def entrepots_update(request, pk):
     """Modifier un entrepôt"""
     entrepot = get_object_or_404(Entrepots, pk=pk)
@@ -374,7 +372,7 @@ def entrepots_update(request, pk):
 
 
 @login_required
-@permission_required('app.delete_entrepots', raise_exception=True)
+@permission_required('gestion.delete_entrepots', raise_exception=True)
 def entrepots_delete(request, pk):
     """Supprimer un entrepôt"""
     entrepot = get_object_or_404(Entrepots, pk=pk)
@@ -410,7 +408,7 @@ def zones_list(request):
 
 
 @login_required
-@permission_required('app.add_zoneentrepots', raise_exception=True)
+@permission_required('gestion.add_zoneentrepots', raise_exception=True)
 def zones_create(request):
     """Créer une nouvelle zone"""
     if request.method == 'POST':
@@ -426,7 +424,7 @@ def zones_create(request):
 
 
 @login_required
-@permission_required('app.change_zoneentrepots', raise_exception=True)
+@permission_required('gestion.change_zoneentrepots', raise_exception=True)
 def zones_update(request, pk):
     """Modifier une zone"""
     zone = get_object_or_404(ZoneEntrepots, pk=pk)
@@ -443,7 +441,7 @@ def zones_update(request, pk):
 
 
 @login_required
-@permission_required('app.delete_zoneentrepots', raise_exception=True)
+@permission_required('gestion.delete_zoneentrepots', raise_exception=True)
 def zones_delete(request, pk):
     """Supprimer une zone"""
     zone = get_object_or_404(ZoneEntrepots, pk=pk)
@@ -487,7 +485,7 @@ def lots_list(request):
 
 
 @login_required
-@permission_required('app.add_lots', raise_exception=True)
+@permission_required('gestion.add_lots', raise_exception=True)
 def lots_create(request):
     """Créer un nouveau lot"""
     if request.method == 'POST':
@@ -523,7 +521,7 @@ def lots_detail(request, pk):
 
 
 @login_required
-@permission_required('app.change_lots', raise_exception=True)
+@permission_required('gestion.change_lots', raise_exception=True)
 def lots_update(request, pk):
     """Modifier un lot"""
     lot = get_object_or_404(Lots, pk=pk)
@@ -540,7 +538,7 @@ def lots_update(request, pk):
 
 
 @login_required
-@permission_required('app.delete_lots', raise_exception=True)
+@permission_required('gestion.delete_lots', raise_exception=True)
 def lots_delete(request, pk):
     """Supprimer un lot"""
     lot = get_object_or_404(Lots, pk=pk)
@@ -580,7 +578,7 @@ def ventes_list(request):
 
 
 @login_required
-@permission_required('app.add_ventes', raise_exception=True)
+@permission_required('gestion.add_ventes', raise_exception=True)
 def ventes_create(request):
     """Créer une nouvelle vente"""
     if request.method == 'POST':
@@ -598,7 +596,7 @@ def ventes_create(request):
 
 
 @login_required
-@permission_required('app.change_ventes', raise_exception=True)
+@permission_required('gestion.change_ventes', raise_exception=True)
 def ventes_update(request, pk):
     """Modifier une vente"""
     vente = get_object_or_404(Ventes, pk=pk)
@@ -615,7 +613,7 @@ def ventes_update(request, pk):
 
 
 @login_required
-@permission_required('app.delete_ventes', raise_exception=True)
+@permission_required('gestion.delete_ventes', raise_exception=True)
 def ventes_delete(request, pk):
     """Supprimer une vente"""
     vente = get_object_or_404(Ventes, pk=pk)
@@ -641,7 +639,7 @@ def mouvements_list(request):
 
 
 @login_required
-@permission_required('app.add_mouvementstocks', raise_exception=True)
+@permission_required('gestion.add_mouvementstocks', raise_exception=True)
 def mouvements_create(request):
     """Créer un nouveau mouvement"""
     if request.method == 'POST':
@@ -657,8 +655,8 @@ def mouvements_create(request):
                 lot=mouvement.lot,
                 type_action='mouvement_stock',
                 user=request.user,
-                ancienne_valeur=f"Zone: {mouvement.zone_origine}",
-                nouvelle_valeur=f"Zone: {mouvement.zone_destination}",
+                ancienne_valeur={"zone": str(mouvement.zone_origine)},
+                nouvelle_valeur={"zone": str(mouvement.zone_destination)},
                 description=f"Mouvement de {mouvement.quantite} {mouvement.lot.produit.unite}"
             )
             
@@ -671,7 +669,7 @@ def mouvements_create(request):
 
 
 @login_required
-@permission_required('app.delete_mouvementstocks', raise_exception=True)
+@permission_required('gestion.delete_mouvementstocks', raise_exception=True)
 def mouvements_delete(request, pk):
     """Supprimer un mouvement"""
     mouvement = get_object_or_404(MouvementStocks, pk=pk)
@@ -725,127 +723,12 @@ class CustomLogoutView(LogoutView):
     next_page = reverse_lazy('login')
 
 #===================== VUES PRÉDICTION DE STOCK ====================
-from django.shortcuts import render
-import pandas as pd
-import numpy as np
-from prophet import Prophet
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import io
-import base64
-import warnings
-warnings.filterwarnings('ignore')
+
 
 def stock_forecast_view(request):
-    """EXACTEMENT votre Colab - Ferme Mokpokpo"""
-    
-    # === VOS DONNÉES EXACTES du Colab [file:124] ===
-    np.random.seed(42)
-    capacite_max = 50000
-    stock_initial = 41000
-    seuil_critique = 10000
-    
-    dates = pd.date_range(start="2021-01-01", periods=60, freq="ME")
-    entrees, sorties, stock = [], [], []
-    stock_actuel = stock_initial
-    
-    for d in dates:
-        month_num = d.month
-        # Entrées saisonnières (Fév-Mai)
-        entrees.append(np.random.randint(3000, 6000) if month_num in [2,3,4,5] else np.random.randint(500, 2000))
-        # Sorties saisonnières (Aoû-Déc)
-        sorties.append(np.random.randint(2500, 4000) if month_num in [8,9,10,11,12] else np.random.randint(1000, 2500))
-        stock_actuel = max(0, min(capacite_max, stock_actuel + entrees[-1] - sorties[-1]))
-        stock.append(stock_actuel)
-    
-    df_stock = pd.DataFrame({
-        'ds': dates,
-        'entrees': entrees,
-        'sorties': sorties,
-        'stock': stock
-    })
-    df_stock['alerte'] = df_stock['stock'].apply(lambda x: 'CRITIQUE' if x < seuil_critique else 'OK')
-    df_stock['remplissage'] = (df_stock['stock'] / capacite_max) * 100
-    
-    # === PROPHET COMME VOTRE COLAB ===
-    df_prophet = df_stock[['ds', 'stock']].rename(columns={'stock': 'y'})
-    model = Prophet(yearly_seasonality=True, weekly_seasonality=True, daily_seasonality=False)
-    model.fit(df_prophet)
-    future = model.make_future_dataframe(periods=36, freq='ME')
-    forecast = model.predict(future)
-    
-    # === MÉTRIQUES ===
-    forecast['alerte'] = forecast['yhat'].apply(lambda x: 'CRITIQUE' if x < seuil_critique else 'OK')
-    forecast['remplissage'] = (forecast['yhat'] / capacite_max) * 100
-    
-    # Données par année EXACTEMENT comme Colab
-    years_data = {}
-    for year in [2026, 2027, 2028]:
-        year_df = forecast[forecast['ds'].dt.year == year][['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'alerte', 'remplissage']]
-        years_data[f'forecast_{year}'] = year_df.round(0).to_dict('records')
-    
-    # Précision MAPE
-    y_true = df_prophet['y'].values
-    y_pred = forecast.head(len(df_prophet))['yhat'].values
-    mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
-    precision = round(100 - mape, 2)
-    
-    # === FONCTIONS GRAPHIQUES ===
-    def plot_forecast():
-        fig, ax = plt.subplots(figsize=(14, 8))
-        model.plot(forecast, ax=ax)
-        ax.set_title('Prévision Complète Stock - Ferme Mokpokpo', fontsize=16, fontweight='bold')
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        plt.close()
-        return base64.b64encode(buffer.getvalue()).decode()
-    
-    def plot_components():
-        fig = model.plot_components(forecast, figsize=(14, 10))
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        plt.close()
-        return base64.b64encode(buffer.getvalue()).decode()
-    
-    def plot_year_bar(year_data, year):
-        if not year_data: return ""
-        fig, ax = plt.subplots(figsize=(12, 6))
-        months = [pd.to_datetime(d['ds']).month for d in year_data]
-        yhat = [float(d['yhat']) for d in year_data]
-        norm = plt.Normalize(min(yhat), max(yhat))
-        colors = plt.cm.RdYlGn(norm(yhat))
-        bars = ax.bar(range(1, 13), yhat, color=colors, alpha=0.8, edgecolor='black', linewidth=0.5)
-        ax.set_title(f'Prévision Stock (kg) par Mois pour {year}', fontsize=14, fontweight='bold')
-        ax.set_xlabel('Mois')
-        ax.set_ylabel('Stock Prévu (kg)')
-        ax.set_xticks(range(1, 13))
-        ax.set_xticklabels(['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'])
-        ax.grid(True, linestyle='--', alpha=0.3)
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        plt.close()
-        return base64.b64encode(buffer.getvalue()).decode()
-    
-    # === TOUTES LES DONNÉES POUR LE TEMPLATE ===
-    context = {
-        'current_stock': int(df_stock['stock'].iloc[-1]),
-        'precision': precision,
-        'capacite_max': capacite_max,
-        'seuil_critique': seuil_critique,
-        'historique_stock': df_stock.tail(12).round(0).to_dict('records'),
-        'historique_prophet': df_prophet.tail(12).round(0).to_dict('records'),
-        **years_data,
-        'img_forecast': plot_forecast(),
-        'img_components': plot_components(),
-        'img_2026': plot_year_bar(years_data['forecast_2026'], '2026'),
-        'img_2027': plot_year_bar(years_data['forecast_2027'], '2027'),
-        'img_2028': plot_year_bar(years_data['forecast_2028'], '2028'),
-    }
-        
-
+    """Prévisions de stock IA - Ferme Mokpokpo (via StockAnalyticsService)"""
+    from .services import StockAnalyticsService
+    context = StockAnalyticsService.analyze_complete()
     return render(request, 'gestion/stock-forecast/stock_forecast.html', context)
 
 
