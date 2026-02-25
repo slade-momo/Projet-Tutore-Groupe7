@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Le block title permet à chaque page d'avoir son propre titre -->
+    <title>{% block title %}Ferme Mokpokpo{% endblock %}</title>
+    
+    <!-- Le block description pour le SEO -->
+    {% block meta_description %}
+    <meta name="description" content="Ferme Mokpokpo - Production et commercialisation de noix de cajou de qualité">
+    {% endblock %}
+    
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- Block pour les fichiers CSS supplémentaires si besoin -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation (COMMUN À TOUTES LES PAGES) -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <h1>Ferme Mokpokpo</h1>
+                </div>
+                <ul class="nav-links">
+                    <!-- Les classes "active" seront gérées dans chaque template enfant -->
+                <li><a href="{% url 'home' %}" id="nav-accueil">Accueil</a></li>
+                    <li><a href="{% url 'produits' %}" id="nav-produits">Produits</a></li>
+                    <li><a href="{% url 'apropos' %}" id="nav-apropos">À propos</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Block pour le contenu principal (UNIQUE À CHAQUE PAGE) -->
+    {% block content %}
+    <!-- Ce contenu sera remplacé par chaque page -->
+    {% endblock %}
+
+    <!-- Footer (COMMUN À TOUTES LES PAGES) -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Ferme Mokpokpo</h4>
+                    <p>Spécialiste en production et commercialisation de noix de cajou premium depuis des années.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="{% url 'home' %}">Accueil</a></li>
+                        <li><a href="{% url 'produits' %}">Produits</a></li>
+                        <li><a href="{% url 'apropos' %}">À propos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@fermemokpokpo.com</p>
+                    <p>Téléphone: +228 90000000</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Ferme Mokpokpo. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Block pour les scripts JS si besoin -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

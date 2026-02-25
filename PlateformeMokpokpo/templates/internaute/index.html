@@ -1,0 +1,58 @@
+{% extends 'internaute/base.html' %}
+
+{% block title %}Ferme Mokpokpo - Noix de Cajou Premium{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Ferme Mokpokpo - Production et commercialisation de noix de cajou de qualité">
+{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2 class="hero-title">Ferme Mokpokpo</h2>
+            <p class="hero-subtitle">Production et commercialisation de noix de cajou de qualité</p>
+            <a href="{% url 'produits' %}" class="btn btn-primary">Découvrir nos produits</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2>Pourquoi nous choisir ?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌱</div>
+                    <h3>Qualité Garantie</h3>
+                    <p>Nos noix de cajou sont produites avec les normes les plus strictes pour assurer une qualité exceptionnelle.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3>Commerce Équitable</h3>
+                    <p>Nous privilégions les pratiques commerciales équitables et le respect de nos partenaires et clients.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Durabilité</h3>
+                    <p>Nos méthodes de production respectent l'environnement et soutiennent une agriculture durable.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Prêt à déguster nos produits ?</h2>
+            <p>Découvrez notre gamme complète de noix de cajou premium</p>
+            <a href="{% url 'produits' %}" class="btn btn-secondary">Explorer nos produits</a>
+        </div>
+    </section>
+
+    <!-- Script pour activer le lien de navigation actif -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('nav-accueil').classList.add('active');
+        });
+    </script>
+{% endblock %}

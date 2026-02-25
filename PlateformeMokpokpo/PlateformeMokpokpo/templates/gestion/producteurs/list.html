@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Producteurs - Plateforme de Gestion{% endblock %}
+{% block page_title %}Gestion des Producteurs{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Producteurs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex gap-2">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher par nom..." value="{{ search_query }}">
+                <select name="statut" class="form-select" style="max-width: 200px;">
+                    <option value="">Tous les statuts</option>
+                    {% for statut in statuts %}
+                    <option value="{{ statut }}">{{ statut }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'producteurs_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nouveau Producteur
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Liste des Producteurs ({{ producteurs|length }})
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Téléphone</th>
+                        <th>Statut</th>
+                        <th>Date Inscription</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if producteurs %}
+                        {% for producteur in producteurs %}
+                        <tr>
+                            <td><strong>{{ producteur.nom }} {{ producteur.prenom }}</strong></td>
+                            <td>{{ producteur.type_producteur }}</td>
+                            <td>{{ producteur.telephone }}</td>
+                            <td>
+                                <span class="badge {% if producteur.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ producteur.statut }}
+                                </span>
+                            </td>
+                            <td>{{ producteur.date_inscription|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'producteurs_detail' producteur.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'producteurs_update' producteur.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'producteurs_delete' producteur.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox"></i> Aucun producteur trouvé
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
