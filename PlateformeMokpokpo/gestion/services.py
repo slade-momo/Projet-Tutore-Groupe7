@@ -368,9 +368,14 @@ def livrer_commande(commande, user):
     from django.utils import timezone
     from decimal import Decimal
 
-    if commande.statut not in ('RESERVEE', 'PARTIELLEMENT_SERVIE',
-                                'EN_ATTENTE_REAPPRO', 'CONFIRMEE'):
+    if commande.statut not in ('RESERVEE', 'EN_ATTENTE_REAPPRO', 'CONFIRMEE'):
         return False, "La commande ne peut pas être livrée dans son état actuel."
+
+    # Vérifier qu'il reste de la quantité à livrer
+    deja_servie = commande.quantite_servie or Decimal('0.00')
+    reste = commande.quantite_demandee - deja_servie
+    if reste <= 0:
+        return False, "La commande est déjà entièrement livrée."
 
     affectations = AffectationLot.objects.filter(
         commande=commande, statut='RESERVE'
@@ -381,6 +386,13 @@ def livrer_commande(commande, user):
 
     total_servi = Decimal('0.00')
     for aff in affectations:
+        qty = aff.quantite_affectee
+        # Ne pas dépasser la quantité restante à livrer
+        if total_servi + qty > reste:
+            qty = reste - total_servi
+            if qty <= 0:
+                break
+
         lot = aff.lot
         qty = aff.quantite_affectee
         lot.quantite_restante = max(Decimal('0.00'), lot.quantite_restante - qty)
@@ -407,8 +419,13 @@ def livrer_commande(commande, user):
         total_servi += qty
         verifier_et_creer_alertes(produit, user)
 
-    commande.quantite_servie = (commande.quantite_servie or Decimal('0.00')) + total_servi
-    commande.statut = 'LIVREE'
+    nouvelle_servie = deja_servie + total_servi
+    # Sécurité : ne jamais dépasser la quantité demandée
+    commande.quantite_servie = min(nouvelle_servie, commande.quantite_demandee)
+    if commande.quantite_servie >= commande.quantite_demandee:
+        commande.statut = 'LIVREE'
+    else:
+        commande.statut = 'RESERVEE'
     commande.date_livraison_effective = timezone.now().date()
     commande.save(update_fields=['quantite_servie', 'statut', 'date_livraison_effective'])
 

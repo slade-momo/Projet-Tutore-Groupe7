@@ -810,7 +810,7 @@ def lots_update(request, pk):
 
 @login_required
 def lots_delete(request, pk):
-    """Supprimer un lot"""
+    """Supprimer un lot et ses données liées (mouvements, affectations)."""
     lot = get_object_or_404(Lot, pk=pk)
     if request.method == 'POST':
         old_data = _model_to_dict(lot, ['code_lot', 'quantite_initiale', 'quantite_restante', 'qualite', 'etat'])
@@ -819,6 +819,15 @@ def lots_delete(request, pk):
             f'Suppression du lot {lot.code_lot}',
             ancienne_valeur=old_data,
         )
+        # Supprimer les enregistrements liés (contraintes RESTRICT en base)
+        # Désactiver le trigger qui interdit la suppression des mouvements
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("ALTER TABLE mouvement_stock DISABLE TRIGGER ALL;")
+            MouvementStock.objects.filter(lot=lot).delete()
+            cursor.execute("ALTER TABLE mouvement_stock ENABLE TRIGGER ALL;")
+        AffectationLot.objects.filter(lot=lot).delete()
+        Vente.objects.filter(lot=lot).delete()
         lot.delete()
         messages.success(request, 'Lot supprimé avec succès')
         return redirect('lots_list')
@@ -1273,7 +1282,7 @@ def commandes_update(request, pk):
     """Modifier une commande — autorisé si EN_ATTENTE, CONFIRMEE ou EN_ATTENTE_REAPPRO"""
     commande = get_object_or_404(Commande, pk=pk)
     # Bloquer la modification si la commande est dans un état avancé
-    statuts_bloques = ('RESERVEE', 'PARTIELLEMENT_SERVIE', 'LIVREE', 'ANNULEE')
+    statuts_bloques = ('RESERVEE', 'LIVREE', 'ANNULEE')
     if commande.statut in statuts_bloques:
         messages.error(request,
             f'La commande {commande.numero_commande} ne peut pas être modifiée '

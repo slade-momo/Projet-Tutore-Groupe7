@@ -231,6 +231,15 @@ class LotForm(forms.ModelForm):
         else:
             self.fields['code_lot'].initial = generate_lot_code()
 
+    def clean_quantite_restante(self):
+        val = self.cleaned_data.get('quantite_restante')
+        if val is None:
+            # Si vide : quantité initiale pour un nouveau lot, valeur existante sinon
+            if self.instance and self.instance.pk and self.instance.quantite_restante is not None:
+                return self.instance.quantite_restante
+            return self.cleaned_data.get('quantite_initiale')
+        return val
+
 
 class VenteForm(forms.ModelForm):
     numero_vente = forms.CharField(
@@ -268,6 +277,10 @@ class VenteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Exclure les lots épuisés de la liste
+        self.fields['lot'].queryset = Lot.objects.exclude(
+            etat='EPUISE'
+        ).filter(quantite_restante__gt=0)
         if self.instance and self.instance.pk:
             self.fields['numero_vente'].initial = self.instance.numero_vente
         else:
@@ -413,6 +426,10 @@ class VenteImmediateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Exclure les lots épuisés de la liste
+        self.fields['lot'].queryset = Lot.objects.exclude(
+            etat='EPUISE'
+        ).filter(quantite_restante__gt=0)
         if self.instance and self.instance.pk:
             self.fields['numero_vente'].initial = self.instance.numero_vente
         else:

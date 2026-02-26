@@ -142,7 +142,7 @@
                 <tr style="border-top: 2px solid #333;"><td><i class="fas fa-check-circle text-success"></i> <strong>Disponible vente immédiate</strong></td>
                     <td class="text-end fw-bold fs-5 ${alerteClass}">${dispo.toFixed(2)}</td></tr>
             </table>
-            ${(info.en_alerte === 'True') ? '<div class="alert alert-danger mt-2 mb-0 py-1 px-2 small"><i class="fas fa-exclamation-triangle"></i> Stock en dessous du seuil d\'alerte</div>' : ''}
+            ${(info.en_alerte === 'True') ? '<div class="alert alert-danger mt-2 mb-0 py-1 px-2 small"><i class="fas fa-exclamation-triangle"></i> Stock insuffisant</div>' : ''}
         `;
 
         // Pré-remplir le prix unitaire

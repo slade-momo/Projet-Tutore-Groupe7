@@ -16,7 +16,6 @@
                     <option value="CONFIRMEE" {% if statut_filter == 'CONFIRMEE' %}selected{% endif %}>Confirmée</option>
                     <option value="RESERVEE" {% if statut_filter == 'RESERVEE' %}selected{% endif %}>Réservée</option>
                     <option value="EN_ATTENTE_REAPPRO" {% if statut_filter == 'EN_ATTENTE_REAPPRO' %}selected{% endif %}>En attente réappro.</option>
-                    <option value="PARTIELLEMENT_SERVIE" {% if statut_filter == 'PARTIELLEMENT_SERVIE' %}selected{% endif %}>Partiellement servie</option>
                     <option value="LIVREE" {% if statut_filter == 'LIVREE' %}selected{% endif %}>Livrée</option>
                     <option value="ANNULEE" {% if statut_filter == 'ANNULEE' %}selected{% endif %}>Annulée</option>
                 </select>
@@ -70,7 +69,7 @@
                             </span>
                         </td>
                         <td>
-                            <span class="badge {% if commande.statut == 'EN_ATTENTE' %}bg-secondary{% elif commande.statut == 'CONFIRMEE' %}bg-primary{% elif commande.statut == 'RESERVEE' %}bg-info{% elif commande.statut == 'EN_ATTENTE_REAPPRO' %}bg-warning text-dark{% elif commande.statut == 'PARTIELLEMENT_SERVIE' %}bg-secondary{% elif commande.statut == 'LIVREE' %}bg-success{% elif commande.statut == 'ANNULEE' %}bg-danger{% else %}bg-dark{% endif %}">
+                            <span class="badge {% if commande.statut == 'EN_ATTENTE' %}bg-secondary{% elif commande.statut == 'CONFIRMEE' %}bg-primary{% elif commande.statut == 'RESERVEE' %}bg-info{% elif commande.statut == 'EN_ATTENTE_REAPPRO' %}bg-warning text-dark{% elif commande.statut == 'LIVREE' %}bg-success{% elif commande.statut == 'ANNULEE' %}bg-danger{% else %}bg-dark{% endif %}">
                                 {{ commande.get_statut_display }}
                             </span>
                         </td>

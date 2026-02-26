@@ -75,7 +75,6 @@ COMMANDE_STATUT_CHOICES = [
     ('EN_ATTENTE', 'En attente'),
     ('CONFIRMEE', 'Confirmée'),
     ('RESERVEE', 'Réservée'),
-    ('PARTIELLEMENT_SERVIE', 'Partiellement servie'),
     ('EN_ATTENTE_REAPPRO', 'En attente réappro.'),
     ('LIVREE', 'Livrée'),
     ('ANNULEE', 'Annulée'),
@@ -115,7 +114,6 @@ DEMANDE_ACHAT_PRIORITE_CHOICES = [
 LIGNE_COMMANDE_STATUT_CHOICES = [
     ('EN_ATTENTE', 'En attente'),
     ('RESERVEE', 'Réservée'),
-    ('PARTIELLEMENT_SERVIE', 'Partiellement servie'),
     ('SERVIE', 'Servie'),
     ('EN_ATTENTE_REAPPRO', 'En attente réappro.'),
 ]
