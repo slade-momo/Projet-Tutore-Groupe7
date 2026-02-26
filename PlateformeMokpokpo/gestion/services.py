@@ -459,21 +459,21 @@ class StockAnalyticsService:
     ]
 
     # ── Saisonnalité cajou au Togo ──
-    # Récolte : Fév-Mai (pic Mars-Avr) → entrées plus fortes
-    # Hors récolte : entrées réduites mais régulières (achats, transferts)
+    # Récolte : Fév-Mai (pic Mars-Avr) → entrées concentrées
+    # Saison pluies (Jun-Sep) et sèche (Oct-Jan) → entrées quasi nulles
     SAISON_ENTREES_TOGO = {
-        1: 0.65,   # Jan : pré-campagne, quelques achats
-        2: 0.95,   # Fév : début campagne cajou
-        3: 1.35,   # Mar : pic récolte
-        4: 1.40,   # Avr : pic récolte
-        5: 1.15,   # Mai : fin récolte
-        6: 0.75,   # Jun : début pluies, achats réduits
-        7: 0.55,   # Jul : saison pluies
-        8: 0.50,   # Aoû : saison pluies
-        9: 0.55,   # Sep : fin pluies
-        10: 0.65,  # Oct : transition, reprises
-        11: 0.70,  # Nov : saison sèche, stockage
-        12: 0.65,  # Déc : saison sèche
+        1: 0.10,   # Jan : hors récolte, quasi nul
+        2: 0.80,   # Fév : début campagne cajou
+        3: 1.80,   # Mar : pic récolte
+        4: 1.90,   # Avr : pic récolte
+        5: 1.20,   # Mai : fin récolte
+        6: 0.15,   # Jun : début pluies, quasi nul
+        7: 0.05,   # Jul : saison pluies, quasi nul
+        8: 0.05,   # Aoû : saison pluies, quasi nul
+        9: 0.08,   # Sep : fin pluies, quasi nul
+        10: 0.08,  # Oct : saison sèche, quasi nul
+        11: 0.08,  # Nov : saison sèche, quasi nul
+        12: 0.08,  # Déc : saison sèche, quasi nul
     }
     SAISON_SORTIES_TOGO = {
         1: 0.60,   # Jan : demande modérée
