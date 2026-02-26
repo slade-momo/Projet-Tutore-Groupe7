@@ -1,11 +1,9 @@
 import re
 import pandas as pd
 import numpy as np
-from prophet import Prophet
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import io
-import base64
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_absolute_error
+import json
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -448,7 +446,17 @@ def receptionner_demande_achat(demande, user):
 
 
 class StockAnalyticsService:
-    """Service de prévision IA basé sur les données réelles en base."""
+    """Service de prévision IA basé sur LinearRegression avec données réelles."""
+
+    # ── Seuils de stock ──
+    SEUIL_MIN = 100
+    SEUIL_ALERTE = 300
+    SEUIL_OPTIMAL = 500
+
+    MOIS_LABELS = [
+        'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+        'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc',
+    ]
 
     @staticmethod
     def generate_stock_data():
@@ -456,25 +464,33 @@ class StockAnalyticsService:
         from .models import (
             MouvementStock, Produit, Entrepot, Lot, Vente, VenteImmediate,
         )
-        from django.db.models import Sum, Q
+        from django.db.models import Sum, Q, Avg
         from django.db.models.functions import TruncMonth
 
         # ── Paramètres réels depuis la BD ──
         agg = Entrepot.objects.aggregate(
             cap=Sum('capacite_max'), seuil=Sum('seuil_critique'))
         capacite_max = float(agg['cap'] or 50000)
-        seuil_critique = float(agg['seuil'] or 10000)
+        seuil_critique = float(agg['seuil'] or StockAnalyticsService.SEUIL_ALERTE)
         stock_actuel = float(
             Produit.objects.aggregate(t=Sum('stock_physique'))['t'] or 0)
 
+        # Seuils dynamiques basés sur les données réelles
+        seuil_min = float(
+            Produit.objects.aggregate(t=Avg('seuil_alerte'))['t']
+            or StockAnalyticsService.SEUIL_MIN)
+        seuil_alerte = max(seuil_critique, StockAnalyticsService.SEUIL_ALERTE)
+        seuil_optimal = float(
+            Produit.objects.aggregate(t=Avg('quantite_optimale_commande'))['t']
+            or StockAnalyticsService.SEUIL_OPTIMAL)
+
         def _to_key(dt):
-            """Convertit un date/datetime en clé 'YYYY-MM'."""
             return f"{dt.year:04d}-{dt.month:02d}" if dt else None
 
         entrees = {}
         sorties = {}
 
-        # ── Source 1 : MouvementStock (source principale) ──
+        # ── Source 1 : MouvementStock ──
         mvt_qs = (
             MouvementStock.objects
             .filter(date_mouvement__isnull=False)
@@ -494,7 +510,7 @@ class StockAnalyticsService:
                 entrees[k] = entrees.get(k, 0) + float(r['ent'] or 0)
                 sorties[k] = sorties.get(k, 0) + float(r['sor'] or 0)
 
-        # ── Source 2 : Lots reçus (complément entrées) ──
+        # ── Source 2 : Lots reçus ──
         lots_agg = (
             Lot.objects
             .filter(date_reception__isnull=False)
@@ -508,7 +524,7 @@ class StockAnalyticsService:
             if k and k not in entrees:
                 entrees[k] = float(r['total'] or 0)
 
-        # ── Source 3 : Ventes + Ventes Immédiates (complément sorties) ──
+        # ── Source 3 : Ventes + Ventes Immédiates ──
         ventes_agg = (
             Vente.objects
             .filter(date_vente__isnull=False)
@@ -535,10 +551,10 @@ class StockAnalyticsService:
             if k:
                 sorties[k] = sorties.get(k, 0) + float(r['total'] or 0)
 
-        # ── Fusionner en série temporelle continue ──
+        # ── Fusion en série temporelle continue ──
         all_keys = sorted(set(entrees.keys()) | set(sorties.keys()))
         if not all_keys:
-            return None, None, capacite_max, seuil_critique, stock_actuel
+            return None, capacite_max, seuil_min, seuil_alerte, seuil_optimal, stock_actuel
 
         first = pd.Timestamp(all_keys[0] + '-01')
         last = pd.Timestamp(all_keys[-1] + '-01')
@@ -553,159 +569,357 @@ class StockAnalyticsService:
                 'sorties': sorties.get(k, 0),
             })
 
-        df_stock = pd.DataFrame(rows)
+        df = pd.DataFrame(rows)
 
         # ── Stock glissant recalé sur le stock physique actuel ──
-        flux_cumule = (df_stock['entrees'] - df_stock['sorties']).cumsum()
+        flux_cumule = (df['entrees'] - df['sorties']).cumsum()
         stock_initial = stock_actuel - float(flux_cumule.iloc[-1])
-        df_stock['stock'] = stock_initial + flux_cumule
-        df_stock['stock'] = df_stock['stock'].clip(lower=0, upper=capacite_max)
+        df['stock'] = stock_initial + flux_cumule
+        df['stock'] = df['stock'].clip(lower=0, upper=capacite_max)
 
-        df_stock['alerte'] = df_stock['stock'].apply(
-            lambda x: 'CRITIQUE' if x < seuil_critique else 'OK')
-        df_stock['remplissage'] = (df_stock['stock'] / capacite_max) * 100
+        # ── Features pour la régression ──
+        df['mois_num'] = df['ds'].dt.month
+        df['tendance'] = np.arange(len(df))
+        df['stock_prev'] = df['stock'].shift(1).fillna(df['stock'].iloc[0])
 
-        df_prophet = df_stock[['ds', 'stock']].rename(columns={'stock': 'y'})
-        return df_stock, df_prophet, capacite_max, seuil_critique, stock_actuel
+        return df, capacite_max, seuil_min, seuil_alerte, seuil_optimal, stock_actuel
+
+    @staticmethod
+    def _train_models(df):
+        """Entraîne les 3 modèles de régression linéaire."""
+        if len(df) < 3:
+            return None, None, None, {}
+
+        # ── Features communes ──
+        X_entrees = df[['mois_num', 'tendance', 'stock_prev']].values
+        y_entrees = df['entrees'].values
+
+        X_sorties = df[['mois_num', 'tendance', 'stock_prev']].values
+        y_sorties = df['sorties'].values
+
+        X_stock = df[['stock_prev', 'entrees', 'sorties', 'mois_num', 'tendance']].values
+        y_stock = df['stock'].values
+
+        # ── Modèle 1 : Prédiction Entrées P(t) ──
+        model_entrees = LinearRegression()
+        model_entrees.fit(X_entrees, y_entrees)
+        pred_entrees = model_entrees.predict(X_entrees)
+
+        # ── Modèle 2 : Prédiction Sorties V(t) ──
+        model_sorties = LinearRegression()
+        model_sorties.fit(X_sorties, y_sorties)
+        pred_sorties = model_sorties.predict(X_sorties)
+
+        # ── Modèle 3 : Prédiction Stock S(t+1) ──
+        model_stock = LinearRegression()
+        model_stock.fit(X_stock, y_stock)
+        pred_stock = model_stock.predict(X_stock)
+
+        # ── Métriques de performance ──
+        def _safe_r2(y_true, y_pred):
+            if len(y_true) < 2 or np.std(y_true) == 0:
+                return 0
+            return max(0, r2_score(y_true, y_pred))
+
+        metrics = {
+            'r2_entrees': round(_safe_r2(y_entrees, pred_entrees) * 100, 1),
+            'r2_sorties': round(_safe_r2(y_sorties, pred_sorties) * 100, 1),
+            'r2_stock': round(_safe_r2(y_stock, pred_stock) * 100, 1),
+            'mae_entrees': round(mean_absolute_error(y_entrees, pred_entrees), 1),
+            'mae_sorties': round(mean_absolute_error(y_sorties, pred_sorties), 1),
+            'mae_stock': round(mean_absolute_error(y_stock, pred_stock), 1),
+            'precision_globale': round(
+                (_safe_r2(y_entrees, pred_entrees) +
+                 _safe_r2(y_sorties, pred_sorties) +
+                 _safe_r2(y_stock, pred_stock)) / 3 * 100, 1),
+        }
+
+        # ── Coefficients pour transparence du modèle ──
+        metrics['coefs_entrees'] = {
+            'Mois': round(model_entrees.coef_[0], 3),
+            'Tendance': round(model_entrees.coef_[1], 3),
+            'Stock_prev': round(model_entrees.coef_[2], 3),
+            'Intercept': round(model_entrees.intercept_, 3),
+        }
+        metrics['coefs_sorties'] = {
+            'Mois': round(model_sorties.coef_[0], 3),
+            'Tendance': round(model_sorties.coef_[1], 3),
+            'Stock_prev': round(model_sorties.coef_[2], 3),
+            'Intercept': round(model_sorties.intercept_, 3),
+        }
+        metrics['coefs_stock'] = {
+            'Stock_prev': round(model_stock.coef_[0], 3),
+            'Entrees': round(model_stock.coef_[1], 3),
+            'Sorties': round(model_stock.coef_[2], 3),
+            'Mois': round(model_stock.coef_[3], 3),
+            'Tendance': round(model_stock.coef_[4], 3),
+            'Intercept': round(model_stock.intercept_, 3),
+        }
+
+        return model_entrees, model_sorties, model_stock, metrics
+
+    @staticmethod
+    def _generate_predictions(df, model_entrees, model_sorties, model_stock,
+                              n_months=36, capacite_max=50000):
+        """Génère n_months de prédictions à partir des modèles."""
+        last_date = df['ds'].iloc[-1]
+        last_stock = float(df['stock'].iloc[-1])
+        last_tendance = int(df['tendance'].iloc[-1])
+
+        predictions = []
+        current_stock = last_stock
+
+        for i in range(1, n_months + 1):
+            future_date = last_date + pd.DateOffset(months=i)
+            mois_num = future_date.month
+            tendance = last_tendance + i
+
+            # Prédire entrées
+            X_e = np.array([[mois_num, tendance, current_stock]])
+            pred_entree = max(0, float(model_entrees.predict(X_e)[0]))
+
+            # Prédire sorties
+            X_s = np.array([[mois_num, tendance, current_stock]])
+            pred_sortie = max(0, float(model_sorties.predict(X_s)[0]))
+
+            # Prédire stock
+            X_st = np.array([[current_stock, pred_entree, pred_sortie,
+                              mois_num, tendance]])
+            pred_stock = float(model_stock.predict(X_st)[0])
+            pred_stock = max(0, min(pred_stock, capacite_max))
+
+            predictions.append({
+                'ds': future_date.strftime('%Y-%m-%d'),
+                'date_label': f"{StockAnalyticsService.MOIS_LABELS[mois_num - 1]} {future_date.year}",
+                'mois_num': mois_num,
+                'year': future_date.year,
+                'entrees': round(pred_entree, 1),
+                'sorties': round(pred_sortie, 1),
+                'stock': round(pred_stock, 1),
+                'flux_net': round(pred_entree - pred_sortie, 1),
+            })
+
+            current_stock = pred_stock
+
+        return predictions
+
+    @staticmethod
+    def _compute_risk_analysis(predictions, seuil_min, seuil_alerte, seuil_optimal):
+        """Calcule l'analyse de risque pour chaque prédiction."""
+        for p in predictions:
+            stock = p['stock']
+            if stock <= seuil_min:
+                p['risque'] = 'CRITIQUE'
+                p['risque_score'] = 100
+            elif stock <= seuil_alerte:
+                p['risque'] = 'ALERTE'
+                p['risque_score'] = 70
+            elif stock <= seuil_optimal:
+                p['risque'] = 'VIGILANCE'
+                p['risque_score'] = 40
+            else:
+                p['risque'] = 'OPTIMAL'
+                p['risque_score'] = 10
+
+        # Mois de rupture estimé
+        rupture_mois = None
+        for p in predictions:
+            if p['stock'] <= seuil_min:
+                rupture_mois = p['date_label']
+                break
+
+        # Tendance globale
+        if len(predictions) >= 2:
+            stocks = [p['stock'] for p in predictions]
+            tendance_pct = ((stocks[-1] - stocks[0]) / max(stocks[0], 1)) * 100
+        else:
+            tendance_pct = 0
+
+        return {
+            'rupture_estimee': rupture_mois,
+            'tendance_pct': round(tendance_pct, 1),
+            'tendance_dir': 'hausse' if tendance_pct > 5 else (
+                'baisse' if tendance_pct < -5 else 'stable'),
+            'mois_critique_count': sum(
+                1 for p in predictions if p['risque'] == 'CRITIQUE'),
+            'mois_alerte_count': sum(
+                1 for p in predictions if p['risque'] == 'ALERTE'),
+            'mois_optimal_count': sum(
+                1 for p in predictions if p['risque'] == 'OPTIMAL'),
+            'stock_moyen_prevu': round(
+                np.mean([p['stock'] for p in predictions]), 1),
+            'stock_min_prevu': round(
+                min(p['stock'] for p in predictions), 1),
+            'stock_max_prevu': round(
+                max(p['stock'] for p in predictions), 1),
+        }
+
+    @staticmethod
+    def _compute_seasonality(df):
+        """Analyse de saisonnalité mensuelle à partir de l'historique."""
+        if len(df) < 6:
+            return None
+
+        seasonal = df.groupby('mois_num').agg(
+            entrees_moy=('entrees', 'mean'),
+            sorties_moy=('sorties', 'mean'),
+            stock_moy=('stock', 'mean'),
+        ).round(1)
+
+        result = {}
+        for mois_num in range(1, 13):
+            label = StockAnalyticsService.MOIS_LABELS[mois_num - 1]
+            if mois_num in seasonal.index:
+                row = seasonal.loc[mois_num]
+                result[label] = {
+                    'entrees': float(row['entrees_moy']),
+                    'sorties': float(row['sorties_moy']),
+                    'stock': float(row['stock_moy']),
+                }
+            else:
+                result[label] = {'entrees': 0, 'sorties': 0, 'stock': 0}
+
+        return result
 
     @staticmethod
     def analyze_complete():
-        """Pipeline complet : données réelles → Prophet → prévisions."""
+        """Pipeline complet : données réelles → LinearRegression → prévisions."""
         result = StockAnalyticsService.generate_stock_data()
-        df_stock, df_prophet, capacite_max, seuil_critique, stock_actuel = result
+        df = result[0]
+        capacite_max = result[1]
+        seuil_min = result[2]
+        seuil_alerte = result[3]
+        seuil_optimal = result[4]
+        stock_actuel = result[5]
 
-        if df_prophet is None or len(df_prophet) < 2:
+        if df is None or len(df) < 2:
             return {
                 'current_stock': int(stock_actuel),
                 'precision': 0,
                 'capacite_max': int(capacite_max),
-                'seuil_critique': int(seuil_critique),
-                'historique_stock': [],
-                'historique_prophet': [],
-                'year_forecasts': [],
+                'seuil_min': int(seuil_min),
+                'seuil_alerte': int(seuil_alerte),
+                'seuil_optimal': int(seuil_optimal),
                 'no_data': True,
             }
 
-        # ── Entraîner Prophet ──
-        has_yearly = len(df_prophet) >= 24
-        model = Prophet(
-            yearly_seasonality=has_yearly,
-            weekly_seasonality=False,
-            daily_seasonality=False,
-        )
-        model.fit(df_prophet)
+        # ── Entraîner les 3 modèles ──
+        model_e, model_s, model_st, metrics = StockAnalyticsService._train_models(df)
 
-        future = model.make_future_dataframe(periods=36, freq='MS')
-        forecast = model.predict(future)
+        if model_e is None:
+            return {
+                'current_stock': int(stock_actuel),
+                'precision': 0,
+                'capacite_max': int(capacite_max),
+                'seuil_min': int(seuil_min),
+                'seuil_alerte': int(seuil_alerte),
+                'seuil_optimal': int(seuil_optimal),
+                'no_data': True,
+            }
 
-        forecast['alerte'] = forecast['yhat'].apply(
-            lambda x: 'CRITIQUE' if x < seuil_critique else 'OK')
-        forecast['remplissage'] = (forecast['yhat'] / capacite_max) * 100
+        # ── Générer 36 mois de prédictions ──
+        predictions = StockAnalyticsService._generate_predictions(
+            df, model_e, model_s, model_st, n_months=36,
+            capacite_max=capacite_max)
 
-        # ── Années de prévision dynamiques ──
-        last_data_year = df_prophet['ds'].max().year
-        forecast_years = [last_data_year + 1, last_data_year + 2, last_data_year + 3]
-        colors = ['var(--clr-danger)', 'var(--clr-warning)', 'var(--clr-info)']
-        icons = ['fas fa-calendar-alt', 'fas fa-calendar-alt', 'fas fa-calendar-alt']
+        # ── Analyse de risque ──
+        risk_analysis = StockAnalyticsService._compute_risk_analysis(
+            predictions, seuil_min, seuil_alerte, seuil_optimal)
+
+        # ── Saisonnalité ──
+        seasonality = StockAnalyticsService._compute_seasonality(df)
+
+        # ── Historique formaté pour Chart.js ──
+        historique = []
+        for _, row in df.iterrows():
+            historique.append({
+                'ds': row['ds'].strftime('%Y-%m-%d'),
+                'date_label': f"{StockAnalyticsService.MOIS_LABELS[row['ds'].month - 1]} {row['ds'].year}",
+                'entrees': round(float(row['entrees']), 1),
+                'sorties': round(float(row['sorties']), 1),
+                'stock': round(float(row['stock']), 1),
+            })
+
+        # ── Prévisions regroupées par année ──
+        last_data_year = df['ds'].max().year
+        forecast_years = sorted(set(p['year'] for p in predictions))
 
         year_forecasts = []
-        for i, year in enumerate(forecast_years):
-            year_df = forecast[forecast['ds'].dt.year == year][
-                ['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'alerte', 'remplissage']]
-            year_data = year_df.round(0).to_dict('records')
+        for year in forecast_years:
+            year_data = [p for p in predictions if p['year'] == year]
             year_forecasts.append({
                 'year': year,
                 'data': year_data,
-                'img': StockAnalyticsService.plot_year_bar(year_data, str(year)),
-                'color': colors[i],
+                'stock_moyen': round(np.mean([p['stock'] for p in year_data]), 1),
+                'entrees_total': round(sum(p['entrees'] for p in year_data), 1),
+                'sorties_total': round(sum(p['sorties'] for p in year_data), 1),
             })
 
-        # ── Précision MAPE ──
-        y_true = df_prophet['y'].values
-        y_pred = forecast.head(len(df_prophet))['yhat'].values
-        mask = y_true != 0
-        if mask.sum() > 0:
-            mape = np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100
-            precision = round(max(0, 100 - mape), 2)
-        else:
-            precision = 0
-
-        # ── Plage de dates pour le sous-titre ──
-        first_year = df_prophet['ds'].min().year
-        last_forecast_year = forecast['ds'].max().year
+        # ── Plage de dates ──
+        first_year = df['ds'].min().year
+        last_forecast_year = predictions[-1]['year'] if predictions else last_data_year
         date_range_str = f"{first_year}–{last_forecast_year}"
+
+        # ── Recommandations automatiques ──
+        recommandations = []
+        if risk_analysis['rupture_estimee']:
+            recommandations.append({
+                'type': 'danger',
+                'icon': 'fas fa-exclamation-circle',
+                'text': f"Rupture de stock estimée en {risk_analysis['rupture_estimee']}. "
+                        f"Planifier un réapprovisionnement urgent.",
+            })
+        if risk_analysis['tendance_dir'] == 'baisse':
+            recommandations.append({
+                'type': 'warning',
+                'icon': 'fas fa-arrow-trend-down',
+                'text': f"Tendance à la baisse ({risk_analysis['tendance_pct']}%). "
+                        f"Réviser la stratégie d'approvisionnement.",
+            })
+        if risk_analysis['mois_alerte_count'] > 3:
+            recommandations.append({
+                'type': 'warning',
+                'icon': 'fas fa-bell',
+                'text': f"{risk_analysis['mois_alerte_count']} mois en zone d'alerte sur les prévisions. "
+                        f"Augmenter la fréquence des commandes.",
+            })
+        if risk_analysis['tendance_dir'] == 'hausse':
+            recommandations.append({
+                'type': 'success',
+                'icon': 'fas fa-arrow-trend-up',
+                'text': f"Tendance positive ({risk_analysis['tendance_pct']}%). "
+                        f"Le stock évolue favorablement.",
+            })
+        if stock_actuel > seuil_optimal:
+            recommandations.append({
+                'type': 'info',
+                'icon': 'fas fa-check-circle',
+                'text': f"Stock actuel ({int(stock_actuel)}) au-dessus du seuil optimal "
+                        f"({int(seuil_optimal)}). Bonne gestion !",
+            })
 
         return {
             'current_stock': int(stock_actuel),
-            'precision': precision,
+            'precision': metrics.get('precision_globale', 0),
             'capacite_max': int(capacite_max),
-            'seuil_critique': int(seuil_critique),
+            'seuil_min': int(seuil_min),
+            'seuil_alerte': int(seuil_alerte),
+            'seuil_optimal': int(seuil_optimal),
             'date_range': date_range_str,
-            'nb_mois_historique': len(df_prophet),
-            'historique_stock': df_stock.tail(12).round(0).to_dict('records'),
-            'historique_prophet': df_prophet.tail(12).round(0).to_dict('records'),
+            'nb_mois_historique': len(df),
+            'metrics': metrics,
+            'risk_analysis': risk_analysis,
+            'recommandations': recommandations,
+            'seasonality': seasonality,
+
+            # ── Données JSON pour Chart.js ──
+            'historique_json': json.dumps(historique),
+            'predictions_json': json.dumps(predictions),
+            'year_forecasts_json': json.dumps(year_forecasts),
+            'seasonality_json': json.dumps(seasonality) if seasonality else '{}',
+
+            # ── Données tableau ──
+            'historique_stock': historique[-12:],
+            'predictions_table': predictions[:12],
             'year_forecasts': year_forecasts,
-            'img_forecast': StockAnalyticsService.plot_forecast(model, forecast),
-            'img_components': StockAnalyticsService.plot_components(model, forecast),
         }
-
-    @staticmethod
-    def plot_forecast(model, forecast):
-        """Graphique principal de prévision Prophet."""
-        fig, ax = plt.subplots(figsize=(14, 8))
-        model.plot(forecast, ax=ax)
-        ax.set_title('Prévision Stock — Ferme Mokpokpo (données réelles)',
-                      fontsize=16, fontweight='bold')
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Stock (kg)')
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        plt.close()
-        return base64.b64encode(buffer.getvalue()).decode()
-
-    @staticmethod
-    def plot_components(model, forecast):
-        """Composantes saisonnières Prophet."""
-        fig = model.plot_components(forecast, figsize=(14, 10))
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        plt.close()
-        return base64.b64encode(buffer.getvalue()).decode()
-
-    @staticmethod
-    def plot_year_bar(year_data, year):
-        """Graphique barres mensuelles pour une année de prévision."""
-        if not year_data:
-            return ""
-
-        plt.style.use('default')
-        fig, ax = plt.subplots(figsize=(12, 6))
-
-        months_present = [pd.to_datetime(d['ds']).month for d in year_data]
-        yhat = [float(d['yhat']) for d in year_data]
-
-        if not yhat:
-            plt.close()
-            return ""
-
-        norm = plt.Normalize(min(yhat), max(yhat))
-        colors = plt.cm.RdYlGn(norm(yhat))
-
-        ax.bar(months_present, yhat, color=colors, alpha=0.8,
-               edgecolor='black', linewidth=0.5)
-        ax.set_title(f'Prévision Stock (kg) par Mois — {year}',
-                      fontsize=14, fontweight='bold')
-        ax.set_xlabel('Mois')
-        ax.set_ylabel('Stock Prévu (kg)')
-        ax.set_xticks(range(1, 13))
-        ax.set_xticklabels(['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
-                            'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'])
-        ax.grid(True, linestyle='--', alpha=0.3)
-
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        plt.close()
-        return base64.b64encode(buffer.getvalue()).decode()
