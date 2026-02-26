@@ -459,22 +459,21 @@ class StockAnalyticsService:
     ]
 
     # ── Saisonnalité cajou au Togo ──
-    # Récolte : Fév-Mai (pic Mars-Avr) → fortes entrées
-    # Saison sèche (Nov-Jan) et saison des pluies (Jun-Sep) → entrées faibles
-    # Ventes/export : pics en Avr-Jun (après récolte) et Nov-Déc (fêtes)
+    # Récolte : Fév-Mai (pic Mars-Avr) → entrées plus fortes
+    # Hors récolte : entrées réduites mais régulières (achats, transferts)
     SAISON_ENTREES_TOGO = {
-        1: 0.30,   # Jan : hors récolte, très peu
-        2: 0.85,   # Fév : début campagne cajou
-        3: 1.50,   # Mar : pic récolte
-        4: 1.60,   # Avr : pic récolte
-        5: 1.10,   # Mai : fin récolte
-        6: 0.40,   # Jun : saison pluies, peu
-        7: 0.20,   # Jul : saison pluies
-        8: 0.15,   # Aoû : saison pluies
-        9: 0.20,   # Sep : fin pluies
-        10: 0.30,  # Oct : transition
-        11: 0.25,  # Nov : saison sèche
-        12: 0.25,  # Déc : saison sèche
+        1: 0.65,   # Jan : pré-campagne, quelques achats
+        2: 0.95,   # Fév : début campagne cajou
+        3: 1.35,   # Mar : pic récolte
+        4: 1.40,   # Avr : pic récolte
+        5: 1.15,   # Mai : fin récolte
+        6: 0.75,   # Jun : début pluies, achats réduits
+        7: 0.55,   # Jul : saison pluies
+        8: 0.50,   # Aoû : saison pluies
+        9: 0.55,   # Sep : fin pluies
+        10: 0.65,  # Oct : transition, reprises
+        11: 0.70,  # Nov : saison sèche, stockage
+        12: 0.65,  # Déc : saison sèche
     }
     SAISON_SORTIES_TOGO = {
         1: 0.60,   # Jan : demande modérée
@@ -694,68 +693,57 @@ class StockAnalyticsService:
         last_stock = float(df['stock'].iloc[-1])
         last_tendance = int(df['tendance'].iloc[-1])
 
-        # Variabilité historique pour ajouter du réalisme
-        hist_entrees_std = max(float(df['entrees'].std()), 1)
-        hist_sorties_std = max(float(df['sorties'].std()), 1)
-        hist_entrees_mean = max(float(df['entrees'].mean()), 1)
-        hist_sorties_mean = max(float(df['sorties'].mean()), 1)
+        # Moyennes et écarts-types historiques
+        hist_entrees_mean = max(float(df['entrees'].mean()), 0.1)
+        hist_sorties_mean = max(float(df['sorties'].mean()), 0.1)
+        hist_entrees_std = max(float(df['entrees'].std()), 0.1)
+        hist_sorties_std = max(float(df['sorties'].std()), 0.1)
 
-        # Calcul de la saisonnalité observée vs saisonnalité Togo
-        # Si assez de données, on pondère historique réel + modèle Togo
+        # Pondération : plus on a de données, plus le modèle LR pèse
+        # Peu de données → on se base surtout sur la saisonnalité Togo
         n = len(df)
-        poids_modele_togo = max(0.3, 1.0 - (n / 36))  # 30% min, 100% à 0 données
+        poids_lr = min(0.4, n / 48)  # 0 à 40% max pour le modèle LR
 
         predictions = []
         current_stock = last_stock
-        np.random.seed(42)  # Reproductibilité
+        np.random.seed(42)
 
         for i in range(1, n_months + 1):
             future_date = last_date + pd.DateOffset(months=i)
             mois_num = future_date.month
             tendance = last_tendance + i
 
-            # Prédiction brute du modèle
+            # Base = moyenne historique × coefficient saisonnier Togo
+            coeff_e = StockAnalyticsService.SAISON_ENTREES_TOGO[mois_num]
+            coeff_s = StockAnalyticsService.SAISON_SORTIES_TOGO[mois_num]
+            base_entree = hist_entrees_mean * coeff_e
+            base_sortie = hist_sorties_mean * coeff_s
+
+            # Ajustement LR (petit correctif, plafonné à ±30% de la base)
             X_e = np.array([[mois_num, tendance, current_stock]])
-            pred_entree_brut = max(0, float(model_entrees.predict(X_e)[0]))
-
+            ajust_entree = float(model_entrees.predict(X_e)[0]) - hist_entrees_mean
+            ajust_entree = max(-base_entree * 0.3, min(ajust_entree, base_entree * 0.3))
             X_s = np.array([[mois_num, tendance, current_stock]])
-            pred_sortie_brut = max(0, float(model_sorties.predict(X_s)[0]))
+            ajust_sortie = float(model_sorties.predict(X_s)[0]) - hist_sorties_mean
+            ajust_sortie = max(-base_sortie * 0.3, min(ajust_sortie, base_sortie * 0.3))
 
-            # Appliquer la saisonnalité cajou togolaise
-            coeff_entree_togo = StockAnalyticsService.SAISON_ENTREES_TOGO[mois_num]
-            coeff_sortie_togo = StockAnalyticsService.SAISON_SORTIES_TOGO[mois_num]
+            pred_entree = base_entree + poids_lr * ajust_entree
+            pred_sortie = base_sortie + poids_lr * ajust_sortie
 
-            # Prédiction pondérée : modèle LR + saisonnalité Togo
-            pred_entree_saison = hist_entrees_mean * coeff_entree_togo
-            pred_sortie_saison = hist_sorties_mean * coeff_sortie_togo
+            # Variabilité légère (±10%)
+            pred_entree += np.random.normal(0, hist_entrees_std * 0.08)
+            pred_sortie += np.random.normal(0, hist_sorties_std * 0.08)
 
-            pred_entree = (
-                (1 - poids_modele_togo) * pred_entree_brut +
-                poids_modele_togo * pred_entree_saison
-            )
-            pred_sortie = (
-                (1 - poids_modele_togo) * pred_sortie_brut +
-                poids_modele_togo * pred_sortie_saison
-            )
+            # Borner entre 0 et 1.8× la moyenne (pas de valeurs irréalistes)
+            pred_entree = max(0, min(pred_entree, hist_entrees_mean * 1.8))
+            pred_sortie = max(0, min(pred_sortie, hist_sorties_mean * 1.8))
 
-            # Ajouter variabilité réaliste (±15% max)
-            noise_e = np.random.normal(0, hist_entrees_std * 0.12)
-            noise_s = np.random.normal(0, hist_sorties_std * 0.12)
-            pred_entree = max(0, pred_entree + noise_e)
-            pred_sortie = max(0, pred_sortie + noise_s)
-
-            # Dégradation de confiance avec le temps (incertitude croissante)
-            # Les prédictions lointaines sont moins fiables
-            incertitude = 1.0 + (i / n_months) * 0.15
-
-            # Prédire stock avec le modèle
-            X_st = np.array([[current_stock, pred_entree, pred_sortie,
-                              mois_num, tendance]])
-            pred_stock = float(model_stock.predict(X_st)[0])
+            # Stock = stock précédent + entrées - sorties (calcul par flux net)
+            pred_stock = current_stock + pred_entree - pred_sortie
             pred_stock = max(0, min(pred_stock, capacite_max))
 
-            # Confiance décroissante pour cette prédiction (de 85% à 55%)
-            confiance = max(55, round(85 - (i / n_months) * 30))
+            # Confiance décroissante (80% → 50%)
+            confiance = max(50, round(80 - (i / n_months) * 30))
 
             predictions.append({
                 'ds': future_date.strftime('%Y-%m-%d'),
