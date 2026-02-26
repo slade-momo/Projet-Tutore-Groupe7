@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Ventes Immédiates - Plateforme de Gestion{% endblock %}
+{% block page_title %}Ventes Immédiates{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Ventes Immédiates{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex gap-2">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher par numéro ou client..." value="{{ search_query }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'ventes_immediates_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nouvelle Vente Immédiate
+            </a>
+        </div>
+    </div>
+
+    {% if total > 0 %}
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16,185,129,.1); color: #10b981;">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="number">{{ total }} XOF</div>
+                <div class="label">Total des ventes immédiates</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-cash-register"></i> Liste des Ventes Immédiates ({{ ventes_immediates|length }})
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>N° Vente</th>
+                        <th>Produit</th>
+                        <th>Client</th>
+                        <th>Qté Demandée</th>
+                        <th>Qté Servie</th>
+                        <th>Type</th>
+                        <th>Montant</th>
+                        <th>Commande liée</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vi in ventes_immediates %}
+                    <tr>
+                        <td><strong>{{ vi.numero_vente }}</strong></td>
+                        <td>
+                            {% if vi.produit %}
+                            <a href="{% url 'produits_detail' vi.produit.pk %}">{{ vi.produit.nom }}</a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>{{ vi.client.nom|default:"Comptoir" }}</td>
+                        <td>{{ vi.quantite_demandee }}</td>
+                        <td>{{ vi.quantite_servie_maintenant }}</td>
+                        <td><span class="badge {% if vi.type_vente == 'TOTALE' %}bg-success{% elif vi.type_vente == 'PARTIELLE' %}bg-info{% elif vi.type_vente == 'URGENTE' %}bg-danger{% else %}bg-secondary{% endif %}">{{ vi.get_type_vente_display }}</span></td>
+                        <td class="text-success fw-bold">{{ vi.montant_total|default:"—" }} XOF</td>
+                        <td>
+                            {% if vi.commande_associee %}
+                            <a href="{% url 'commandes_detail' vi.commande_associee.pk %}">
+                                {{ vi.commande_associee.numero_commande }}
+                            </a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>{{ vi.date_vente|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'ventes_immediates_delete' vi.pk %}" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <i class="fas fa-bolt d-block"></i>
+                                <p>Aucune vente immédiate</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

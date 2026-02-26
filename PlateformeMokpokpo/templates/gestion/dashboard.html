@@ -1,95 +1,119 @@
 {% extends 'base.html' %}
 
-{% block title %}Tableau de Bord{% endblock %}
+{% block title %}Tableau de Bord - Mokpokpo{% endblock %}
 {% block page_title %}Tableau de Bord{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> Accueil{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Statistiques principales -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-2 col-md-4 col-6">
             <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(59,130,246,.1); color: #3b82f6;">
+                    <i class="fas fa-users"></i>
+                </div>
                 <div class="number">{{ total_clients }}</div>
                 <div class="label">Clients</div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-xl-2 col-md-4 col-6">
             <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16,185,129,.1); color: #10b981;">
+                    <i class="fas fa-box"></i>
+                </div>
                 <div class="number">{{ total_produits }}</div>
                 <div class="label">Produits</div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-xl-2 col-md-4 col-6">
             <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(139,92,246,.1); color: #8b5cf6;">
+                    <i class="fas fa-cubes"></i>
+                </div>
                 <div class="number">{{ total_lots }}</div>
                 <div class="label">Lots</div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-xl-2 col-md-4 col-6">
             <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(6,182,212,.1); color: #06b6d4;">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
                 <div class="number">{{ total_ventes }}</div>
                 <div class="label">Ventes</div>
             </div>
         </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245,158,11,.1); color: #f59e0b;">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="number">{{ total_commandes }}</div>
+                <div class="label">Commandes</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card" {% if total_alertes > 0 %}style="border-color: #ef4444;"{% endif %}>
+                <div class="stat-icon" style="background: rgba(239,68,68,.1); color: #ef4444;">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="number" {% if total_alertes > 0 %}style="color: #ef4444;"{% endif %}>{{ total_alertes }}</div>
+                <div class="label">Alertes Stock</div>
+            </div>
+        </div>
     </div>
-    
-    <!-- Alertes importantes -->
-    <div class="row mb-4">
+
+    <!-- ALERT BANNERS -->
+    {% if lots_expires > 0 or lots_expiration_proche > 0 or entrepots_alerte > 0 %}
+    <div class="row g-3 mb-4">
         {% if lots_expires > 0 %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-danger">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-exclamation-circle text-danger"></i> Lots Expirés
-                    </h5>
-                    <p class="card-text">
-                        {{ lots_expires }} lot(s) ont expiré. <a href="{% url 'lots_list' %}">Voir les lots</a>
-                    </p>
+        <div class="col-md-4">
+            <div class="alert alert-danger d-flex align-items-start gap-3 mb-0" style="border-left: 4px solid #ef4444;">
+                <i class="fas fa-circle-exclamation mt-1" style="font-size:18px;"></i>
+                <div>
+                    <strong>{{ lots_expires }} lot(s) expiré(s)</strong>
+                    <div class="small mt-1"><a href="{% url 'lots_list' %}" class="alert-link">Voir les lots &rarr;</a></div>
                 </div>
             </div>
         </div>
         {% endif %}
-        
         {% if lots_expiration_proche > 0 %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-warning">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-calendar-times text-warning"></i> Expiration Proche
-                    </h5>
-                    <p class="card-text">
-                        {{ lots_expiration_proche }} lot(s) expireront dans 30 jours. <a href="{% url 'lots_list' %}">Voir les lots</a>
-                    </p>
+        <div class="col-md-4">
+            <div class="alert alert-warning d-flex align-items-start gap-3 mb-0" style="border-left: 4px solid #f59e0b;">
+                <i class="fas fa-calendar-xmark mt-1" style="font-size:18px;"></i>
+                <div>
+                    <strong>{{ lots_expiration_proche }} lot(s) expirent bientôt</strong>
+                    <div class="small mt-1"><a href="{% url 'lots_list' %}" class="alert-link">Voir les lots &rarr;</a></div>
                 </div>
             </div>
         </div>
         {% endif %}
-        
         {% if entrepots_alerte > 0 %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-info">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-warehouse text-info"></i> Entrepôts Alerte
-                    </h5>
-                    <p class="card-text">
-                        {{ entrepots_alerte }} entrepôt(s) sous le seuil critique. <a href="{% url 'entrepots_list' %}">Voir les entrepôts</a>
-                    </p>
+        <div class="col-md-4">
+            <div class="alert alert-info d-flex align-items-start gap-3 mb-0" style="border-left: 4px solid #06b6d4;">
+                <i class="fas fa-warehouse mt-1" style="font-size:18px;"></i>
+                <div>
+                    <strong>{{ entrepots_alerte }} entrepôt(s) sous le seuil</strong>
+                    <div class="small mt-1"><a href="{% url 'entrepots_list' %}" class="alert-link">Voir les entrepôts &rarr;</a></div>
                 </div>
             </div>
         </div>
         {% endif %}
     </div>
-    
-    <!-- Dernieres activités -->
-    <div class="row">
-        <div class="col-lg-6 mb-4">
+    {% endif %}
+
+    <!-- ACTIVITY TABLES -->
+    <div class="row g-4">
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-arrows-alt"></i> Derniers Mouvements
+                    <i class="fas fa-arrows-rotate"></i>
+                    <span>Derniers Mouvements</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -101,16 +125,19 @@
                         <tbody>
                             {% for mouvement in derniers_mouvements %}
                             <tr>
-                                <td>{{ mouvement.date_mouvement|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    <span class="badge bg-info">{{ mouvement.type_mouvement }}</span>
-                                </td>
+                                <td class="text-muted">{{ mouvement.date_mouvement|date:"d/m/Y H:i" }}</td>
+                                <td><span class="badge bg-info">{{ mouvement.type_mouvement }}</span></td>
                                 <td><a href="{% url 'lots_detail' mouvement.lot.id %}">{{ mouvement.lot.code_lot }}</a></td>
-                                <td>{{ mouvement.quantite }}</td>
+                                <td class="fw-bold">{{ mouvement.quantite }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">Aucun mouvement</td>
+                                <td colspan="4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-arrows-rotate d-block"></i>
+                                        <p>Aucun mouvement récent</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -118,14 +145,15 @@
                 </div>
             </div>
         </div>
-        
-        <div class="col-lg-6 mb-4">
+
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-shopping-cart"></i> Dernières Ventes
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Dernières Ventes</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Numéro</th>
@@ -139,12 +167,17 @@
                             <tr>
                                 <td><a href="{% url 'ventes_list' %}">{{ vente.numero_vente }}</a></td>
                                 <td>{{ vente.client.nom|default:"N/A" }}</td>
-                                <td>{{ vente.montant_total }} XOF</td>
-                                <td>{{ vente.date_vente|date:"d/m/Y" }}</td>
+                                <td class="fw-bold" style="color: #10b981;">{{ vente.montant_total }} XOF</td>
+                                <td class="text-muted">{{ vente.date_vente|date:"d/m/Y" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">Aucune vente</td>
+                                <td colspan="4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-shopping-cart d-block"></i>
+                                        <p>Aucune vente récente</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -153,48 +186,52 @@
             </div>
         </div>
     </div>
-    
-    <!-- Stock par zone -->
-    <div class="row">
-        <div class="col-12 mb-4">
+
+    <!-- STOCK PAR ZONE -->
+    <div class="row g-4 mt-0">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-th"></i> Stock par Zone
+                    <i class="fas fa-th-large"></i>
+                    <span>Stock par Zone</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Zone</th>
                                 <th>Entrepôt</th>
                                 <th>Quantité</th>
                                 <th>Capacité</th>
-                                <th>Utilisation</th>
+                                <th style="min-width:180px;">Utilisation</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for zone in stock_par_zone %}
                             <tr>
-                                <td>{{ zone.nom }}</td>
+                                <td class="fw-bold">{{ zone.nom }}</td>
                                 <td>{{ zone.entrepot.nom }}</td>
                                 <td>{{ zone.quantite }}</td>
                                 <td>{{ zone.capacite }}</td>
                                 <td>
                                     {% widthratio zone.quantite zone.capacite 100 as percentage %}
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar" role="progressbar" 
-                                             style="width: {{ percentage }}%;" 
-                                             aria-valuenow="{{ percentage }}" 
-                                             aria-valuemin="0" 
-                                             aria-valuemax="100">
-                                            {{ percentage }}%
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar {% if percentage > 85 %}bg-danger{% elif percentage > 60 %}bg-warning{% else %}bg-success{% endif %}"
+                                                 style="width: {{ percentage }}%;"></div>
                                         </div>
+                                        <span class="text-muted" style="font-size:12px; min-width:36px;">{{ percentage }}%</span>
                                     </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted">Aucune zone</td>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="fas fa-th-large d-block"></i>
+                                        <p>Aucune zone configurée</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

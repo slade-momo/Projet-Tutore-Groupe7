@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}{{ commande.numero_commande }} - Détail Commande{% endblock %}
+{% block page_title %}Détail de la Commande{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'commandes_list' %}">Commandes</a> / {{ commande.numero_commande }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Infos commande -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-file-invoice"></i> Commande {{ commande.numero_commande }}</span>
+                    <div>
+                        {% if commande.statut == 'EN_ATTENTE' %}
+                        <form method="post" action="{% url 'commande_accepter' commande.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-check"></i> Accepter
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if commande.statut == 'CONFIRMEE' %}
+                        <form method="post" action="{% url 'commande_confirmer' commande.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fas fa-lock"></i> Réserver le stock
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if commande.statut == 'EN_ATTENTE_REAPPRO' %}
+                        <form method="post" action="{% url 'commande_confirmer' commande.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-warning">
+                                <i class="fas fa-redo"></i> Relancer la réservation
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if commande.statut == 'RESERVEE' %}
+                        <form method="post" action="{% url 'commande_livrer' commande.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-truck"></i> Livrer
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if commande.statut == 'EN_ATTENTE' or commande.statut == 'CONFIRMEE' or commande.statut == 'EN_ATTENTE_REAPPRO' %}
+                        <a href="{% url 'commandes_update' commande.pk %}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        {% endif %}
+                        {% if commande.statut != 'LIVREE' %}
+                        <a href="{% url 'commandes_delete' commande.pk %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 40%;">N° Commande</th>
+                            <td>{{ commande.numero_commande }}</td>
+                        </tr>
+                        <tr>
+                            <th>Client</th>
+                            <td>
+                                {% if commande.client %}
+                                <a href="{% url 'clients_detail' commande.client.pk %}">{{ commande.client.nom }}</a>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Quantité demandée</th>
+                            <td>{{ commande.quantite_demandee }}</td>
+                        </tr>
+                        <tr>
+                            <th>Quantité réservée</th>
+                            <td>
+                                <span class="fw-bold {% if commande.quantite_reservee >= commande.quantite_demandee %}text-success{% elif commande.quantite_reservee > 0 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ commande.quantite_reservee|default:"0" }}
+                                </span>
+                                / {{ commande.quantite_demandee }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Quantité servie</th>
+                            <td><span class="fw-bold text-info">{{ commande.quantite_servie|default:"0" }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Priorité</th>
+                            <td>
+                                <span class="badge {% if commande.priorite == 'URGENTE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ commande.get_priorite_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Statut</th>
+                            <td>
+                                <span class="badge {% if commande.statut == 'EN_ATTENTE' %}bg-secondary{% elif commande.statut == 'CONFIRMEE' %}bg-primary{% elif commande.statut == 'RESERVEE' %}bg-info{% elif commande.statut == 'EN_ATTENTE_REAPPRO' %}bg-warning text-dark{% elif commande.statut == 'LIVREE' %}bg-success{% elif commande.statut == 'ANNULEE' %}bg-danger{% else %}bg-dark{% endif %}">
+                                    {{ commande.get_statut_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Date commande</th>
+                            <td>{{ commande.date_commande|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Livraison souhaitée</th>
+                            <td>{{ commande.date_livraison_souhaitee|date:"d/m/Y"|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Livraison effective</th>
+                            <td>{{ commande.date_livraison_effective|date:"d/m/Y"|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Observations</th>
+                            <td>{{ commande.observations|default:"—" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lignes de commande + info stock -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-list-ol"></i> Lignes de Commande &amp; Stock
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Qté demandée</th>
+                                <th>Qté réservée</th>
+                                <th>Statut</th>
+                                <th>Stock dispo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in lignes_avec_stock %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'produits_detail' item.ligne.produit.pk %}">{{ item.ligne.produit.nom }}</a>
+                                </td>
+                                <td>{{ item.ligne.quantite_demandee }}</td>
+                                <td>
+                                    <span class="fw-bold {% if item.ligne.quantite_reservee >= item.ligne.quantite_demandee %}text-success{% elif item.ligne.quantite_reservee > 0 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ item.ligne.quantite_reservee|default:"0" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if item.ligne.statut_ligne == 'RESERVEE' %}bg-info{% elif item.ligne.statut_ligne == 'EN_ATTENTE_REAPPRO' %}bg-warning text-dark{% elif item.ligne.statut_ligne == 'SERVIE' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ item.ligne.get_statut_ligne_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="{% if item.stock.en_alerte %}text-danger fw-bold{% else %}text-success{% endif %}">
+                                        {{ item.stock.stock_disponible }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">
+                                        Phys: {{ item.stock.stock_physique }} |
+                                        Rés: {{ item.stock.stock_reserve }} |
+                                        Tampon: {{ item.stock.stock_tampon_comptoir }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state" style="padding:24px;">
+                                        <i class="fas fa-list-ol d-block"></i>
+                                        <p>Aucune ligne de commande</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Affectations de lots -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cubes"></i> Affectation des Lots
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Lot</th>
+                                <th>Quantité affectée</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for aff in affectations %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'lots_detail' aff.lot.pk %}">{{ aff.lot.code_lot }}</a>
+                                </td>
+                                <td>{{ aff.quantite_affectee }}</td>
+                                <td>
+                                    <span class="badge {% if aff.statut == 'RESERVE' %}bg-info{% elif aff.statut == 'SERVI' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ aff.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td>{{ aff.date_affectation|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state" style="padding:24px;">
+                                        <i class="fas fa-cubes d-block"></i>
+                                        <p>Aucune affectation</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mouvements liés -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-arrows-alt"></i> Mouvements de Stock liés
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Lot</th>
+                                <th>Quantité</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mvt in mouvements %}
+                            <tr>
+                                <td>{{ mvt.date_mouvement|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <span class="badge {% if mvt.type_mouvement == 'RESERVATION' %}bg-info{% elif mvt.type_mouvement == 'SORTIE' %}bg-danger{% elif mvt.type_mouvement == 'LIBERATION' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {{ mvt.get_type_mouvement_display }}
+                                    </span>
+                                </td>
+                                <td>{{ mvt.lot.code_lot|default:"—" }}</td>
+                                <td>{{ mvt.quantite }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state" style="padding:24px;">
+                                        <i class="fas fa-arrows-rotate d-block"></i>
+                                        <p>Aucun mouvement</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

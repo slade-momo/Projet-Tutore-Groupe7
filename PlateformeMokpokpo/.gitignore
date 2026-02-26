@@ -9,6 +9,7 @@ staticfiles/
 # Environnement et Secrets (TRÈS IMPORTANT)
 .env
 .venv/
+.virtualEnviroment/
 env/
 venv/
 ENV/

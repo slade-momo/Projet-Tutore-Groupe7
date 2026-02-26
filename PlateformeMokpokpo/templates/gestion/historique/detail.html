@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load historique_filters %}
+
+{% block title %}Détail Historique - Plateforme de Gestion{% endblock %}
+{% block page_title %}Détail de l'entrée{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'historique_list' %}">Historique</a> / Détail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Informations principales -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas {{ historique.type_action|action_icon }}"></i>
+                        {{ historique.type_action|action_label }}
+                    </span>
+                    <span class="badge bg-{{ historique.type_action|action_color }}">
+                        {{ historique.type_action|action_label }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th style="width:40%;">Type d'action</th>
+                            <td>
+                                <span class="badge bg-{{ historique.type_action|action_color }}">
+                                    <i class="fas {{ historique.type_action|action_icon }}"></i>
+                                    {{ historique.type_action|action_label }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Date et heure</th>
+                            <td>{{ historique.date_action|date:"d/m/Y à H:i:s" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <td>
+                                {% if historique.user %}
+                                <i class="fas fa-user text-muted"></i> {{ historique.user.username }}
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Lot concerné</th>
+                            <td>
+                                {% if historique.lot %}
+                                <a href="{% url 'lots_detail' historique.lot.pk %}">
+                                    <i class="fas fa-box"></i> {{ historique.lot.code_lot }}
+                                </a>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Commande liée</th>
+                            <td>
+                                {% if historique.commande %}
+                                <a href="{% url 'commandes_detail' historique.commande.pk %}">
+                                    <i class="fas fa-file-invoice"></i> {{ historique.commande.numero_commande }}
+                                </a>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>{{ historique.description|default:"—" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé visuel -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i> Résumé
+                </div>
+                <div class="card-body text-center">
+                    <div style="width:64px;height:64px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:16px;"
+                         class="bg-{{ historique.type_action|action_color }} bg-opacity-10">
+                        <i class="fas {{ historique.type_action|action_icon }}" style="color:var(--clr-{{ historique.type_action|action_color }}, #64748b);"></i>
+                    </div>
+                    <h5>{{ historique.type_action|action_label }}</h5>
+                    <p class="text-muted">{{ historique.date_action|date:"d/m/Y à H:i" }}</p>
+                    {% if historique.description %}
+                    <hr>
+                    <p class="mb-0">{{ historique.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Valeurs détaillées -->
+    <div class="row">
+        {% if historique.ancienne_valeur %}
+        <div class="col-lg-6 mb-4">
+            <div class="card border-danger border-opacity-25">
+                <div class="card-header" style="background:#fef2f2 !important; border-bottom:1px solid #fecaca;">
+                    <i class="fas fa-arrow-left text-danger"></i>
+                    <strong class="text-danger">Ancienne valeur</strong>
+                </div>
+                <div class="card-body">
+                    {{ historique.ancienne_valeur|json_display_full }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if historique.nouvelle_valeur %}
+        <div class="col-lg-6 mb-4">
+            <div class="card border-success border-opacity-25">
+                <div class="card-header" style="background:#f0fdf4 !important; border-bottom:1px solid #bbf7d0;">
+                    <i class="fas fa-arrow-right text-success"></i>
+                    <strong class="text-success">Nouvelle valeur</strong>
+                </div>
+                <div class="card-body">
+                    {{ historique.nouvelle_valeur|json_display_full }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not historique.ancienne_valeur and not historique.nouvelle_valeur %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-database text-muted d-block" style="font-size:2rem;margin-bottom:12px;"></i>
+                    <p class="text-muted mb-0">Aucune donnée de valeur enregistrée pour cette entrée.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="text-end">
+        <a href="{% url 'historique_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à l'historique
+        </a>
+    </div>
+</div>
+{% endblock %}

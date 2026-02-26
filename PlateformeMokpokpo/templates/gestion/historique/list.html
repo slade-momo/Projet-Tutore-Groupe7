@@ -1,50 +1,253 @@
 {% extends "base.html" %}
+{% load historique_filters %}
 
 {% block title %}Historique - Plateforme de Gestion{% endblock %}
 {% block page_title %}Historique de Traçabilité{% endblock %}
 {% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Historique{% endblock %}
 
 {% block content %}
+<style>
+    .timeline-item {
+        position: relative;
+        padding: 16px 20px;
+        border-left: 3px solid var(--clr-border);
+        margin-left: 24px;
+        transition: all .2s ease;
+    }
+    .timeline-item:hover {
+        background: rgba(59,130,246,.03);
+        border-left-color: var(--clr-accent);
+    }
+    .timeline-icon {
+        position: absolute;
+        left: -18px;
+        top: 18px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .8rem;
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    }
+    .timeline-icon.bg-success { background: var(--clr-success) !important; }
+    .timeline-icon.bg-info { background: var(--clr-info) !important; }
+    .timeline-icon.bg-danger { background: var(--clr-danger) !important; }
+    .timeline-icon.bg-warning { background: var(--clr-warning) !important; color: #1e293b !important; }
+    .timeline-icon.bg-primary { background: var(--clr-accent) !important; }
+    .timeline-icon.bg-secondary { background: #64748b !important; }
+    .timeline-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+    .timeline-date {
+        font-size: .8rem;
+        color: #64748b;
+        white-space: nowrap;
+    }
+    .timeline-desc {
+        font-size: .95rem;
+        color: var(--clr-text);
+        margin-bottom: 8px;
+    }
+    .timeline-values {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .timeline-val-block {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: .85rem;
+    }
+    .timeline-val-block.old {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+    .timeline-val-block.new {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+    .timeline-val-label {
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .timeline-val-block.old .timeline-val-label { color: #dc2626; }
+    .timeline-val-block.new .timeline-val-label { color: #16a34a; }
+    .filter-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .action-type-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+</style>
+
 <div class="container-fluid">
-    <div class="card">
-        <div class="card-header">
-            <i class="fas fa-history"></i> Historique des Actions
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Type Action</th>
-                        <th>Lot</th>
-                        <th>Utilisateur</th>
-                        <th>Ancienne Valeur</th>
-                        <th>Nouvelle Valeur</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if historiques %}
-                        {% for historique in historiques %}
-                        <tr>
-                            <td>{{ historique.date_action|date:"d/m/Y H:i" }}</td>
-                            <td><span class="badge bg-warning">{{ historique.type_action }}</span></td>
-                            <td>{{ historique.lot.code_lot }}</td>
-                            <td>{{ historique.user.username }}</td>
-                            <td><code>{{ historique.ancienne_valeur }}</code></td>
-                            <td><code class="text-success">{{ historique.nouvelle_valeur }}</code></td>
-                            <td>{{ historique.description }}</td>
-                        </tr>
+    <!-- Barre de recherche et filtres -->
+    <div class="card mb-4">
+        <div class="card-body py-3">
+            <form method="GET" class="filter-bar">
+                <div class="flex-grow-1" style="min-width:200px;">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher dans l'historique..." value="{{ search_query }}">
+                </div>
+                <div style="min-width:180px;">
+                    <select name="type_action" class="form-select">
+                        <option value="">Tous les types</option>
+                        {% for ta in types_action %}
+                        <option value="{{ ta }}" {% if type_action_filter == ta %}selected{% endif %}>{{ ta|action_label }}</option>
                         {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox"></i> Aucun historique trouvé
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Filtrer
+                </button>
+                {% if search_query or type_action_filter %}
+                <a href="{% url 'historique_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Réinitialiser
+                </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(59,130,246,.1);color:#3b82f6;">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="number">{{ historiques|length }}</div>
+                <div class="label">Total entrées</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(16,185,129,.1);color:#10b981;">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="number">{{ count_creations }}</div>
+                <div class="label">Créations</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(6,182,212,.1);color:#06b6d4;">
+                    <i class="fas fa-pen"></i>
+                </div>
+                <div class="number">{{ count_modifications }}</div>
+                <div class="label">Modifications</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(239,68,68,.1);color:#ef4444;">
+                    <i class="fas fa-trash"></i>
+                </div>
+                <div class="number">{{ count_suppressions }}</div>
+                <div class="label">Suppressions</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline de l'historique -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-stream"></i> Journal d'activité</span>
+            <span class="badge bg-primary">{{ historiques|length }} entrée{{ historiques|length|pluralize:"s" }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if historiques %}
+                <div style="padding: 20px 16px 20px 32px;">
+                    {% for h in historiques %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-{{ h.type_action|action_color }}">
+                            <i class="fas {{ h.type_action|action_icon }}"></i>
+                        </div>
+                        <div class="timeline-meta">
+                            <span class="action-type-pill bg-{{ h.type_action|action_color }} bg-opacity-10" style="color:var(--clr-{{ h.type_action|action_color }}, #64748b);">
+                                <i class="fas {{ h.type_action|action_icon }}"></i>
+                                {{ h.type_action|action_label }}
+                            </span>
+                            <span class="timeline-date">
+                                <i class="far fa-clock"></i> {{ h.date_action|date:"d/m/Y à H:i" }}
+                            </span>
+                            {% if h.user %}
+                            <span class="timeline-date">
+                                <i class="fas fa-user"></i> {{ h.user.username }}
+                            </span>
+                            {% endif %}
+                            {% if h.lot %}
+                            <span class="timeline-date">
+                                <i class="fas fa-box"></i> <a href="{% url 'lots_detail' h.lot.pk %}">{{ h.lot.code_lot }}</a>
+                            </span>
+                            {% endif %}
+                            {% if h.commande %}
+                            <span class="timeline-date">
+                                <i class="fas fa-file-invoice"></i> <a href="{% url 'commandes_detail' h.commande.pk %}">{{ h.commande.numero_commande }}</a>
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        {% if h.description %}
+                        <div class="timeline-desc">{{ h.description }}</div>
+                        {% endif %}
+
+                        {% if h.ancienne_valeur or h.nouvelle_valeur %}
+                        <div class="timeline-values">
+                            {% if h.ancienne_valeur %}
+                            <div class="timeline-val-block old">
+                                <div class="timeline-val-label"><i class="fas fa-arrow-left"></i> Avant</div>
+                                {{ h.ancienne_valeur|json_display:3 }}
+                            </div>
+                            {% endif %}
+                            {% if h.nouvelle_valeur %}
+                            <div class="timeline-val-block new">
+                                <div class="timeline-val-label"><i class="fas fa-arrow-right"></i> Après</div>
+                                {{ h.nouvelle_valeur|json_display:3 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Bouton détail si beaucoup de données -->
+                        {% if h.ancienne_valeur or h.nouvelle_valeur %}
+                        <div class="mt-2">
+                            <a href="{% url 'historique_detail' h.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-expand"></i> Voir le détail complet
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+            <div class="empty-state" style="padding:60px 20px;">
+                <i class="fas fa-clock-rotate-left d-block" style="font-size:3rem;color:#94a3b8;margin-bottom:16px;"></i>
+                <p class="mb-1" style="font-size:1.1rem;color:#475569;">Aucun historique trouvé</p>
+                <p class="text-muted">Les actions de création, modification et suppression seront enregistrées ici.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -6,25 +6,29 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card border-danger">
-                <div class="card-header bg-danger text-white">
-                    <i class="fas fa-exclamation-triangle"></i> Confirmation de suppression
+        <div class="col-lg-5">
+            <div class="card" style="border-color: var(--clr-danger);">
+                <div class="card-header">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--clr-danger) !important;"></i>
+                    <span>Confirmation de suppression</span>
                 </div>
-                <div class="card-body">
-                    <p class="mb-4">
+                <div class="card-body text-center py-4">
+                    <div style="width:64px; height:64px; border-radius:50%; background: rgba(239,68,68,.1); display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                        <i class="fas fa-trash" style="font-size:24px; color: var(--clr-danger);"></i>
+                    </div>
+                    <p class="mb-3" style="font-size:15px;">
                         Êtes-vous sûr de vouloir supprimer cet élément ?
                     </p>
-                    <div class="alert alert-warning">
-                        <strong>{{ object.nom }}</strong>
+                    <div style="background: var(--clr-bg); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px;">
+                        <strong style="color: var(--clr-primary);">{{ object }}</strong>
                     </div>
-                    <p class="text-muted mb-4">
-                        Cette action est irréversible et supprimera définitivement l'enregistrement et toutes les données associées.
+                    <p class="text-muted mb-4" style="font-size:12px;">
+                        <i class="fas fa-info-circle"></i> Cette action est irréversible et supprimera définitivement l'enregistrement et toutes les données associées.
                     </p>
                     
                     <form method="post">
                         {% csrf_token %}
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-2 justify-content-center">
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-trash"></i> Supprimer définitivement
                             </button>

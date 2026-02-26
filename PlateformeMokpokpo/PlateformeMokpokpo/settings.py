@@ -27,7 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-3bfglg6$*6acl6h5lrb1u*n2i&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
 
 # Application definition
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'gestion',
+    'Internaute',
 ]
 
 MIDDLEWARE = [
@@ -86,6 +87,11 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '5432'),
+         'OPTIONS': {
+            'options': '-c search_path=public,stock_cajou'
+            # Django crée ses tables dans public (1er schéma),
+            # les tables métier sont trouvées via stock_cajou
+        }
     }
 }
 
@@ -125,9 +131,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom test runner pour les modèles non managés
+TEST_RUNNER = 'gestion.test_runner.UnmanagedModelTestRunner'
 
 # Configuration de l'authentification
 # settings.py
@@ -136,8 +146,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 
 # Où rediriger après une connexion réussie
-# (par exemple vers ton dashboard)
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/gestion/'
 
 # Où rediriger après déconnexion
 LOGOUT_REDIRECT_URL = '/login/'

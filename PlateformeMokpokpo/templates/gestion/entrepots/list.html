@@ -54,7 +54,7 @@
                             <td>{{ entrepot.responsable }}</td>
                             <td>{{ entrepot.capacite_max }}</td>
                             <td>{{ entrepot.quantite_disponible }}</td>
-                            <td><span class="badge {% if entrepot.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">{{ entrepot.statut }}</span></td>
+                            <td><span class="badge {% if entrepot.statut == 'OPERATIONNEL' %}bg-success{% elif entrepot.statut == 'EN_ALERTE' %}bg-warning text-dark{% elif entrepot.statut == 'CRITIQUE' %}bg-danger{% else %}bg-secondary{% endif %}">{{ entrepot.get_statut_display }}</span></td>
                             <td>
                                 <a href="{% url 'entrepots_detail' entrepot.pk %}" class="btn btn-sm btn-info">
                                     <i class="fas fa-eye"></i>
@@ -70,8 +70,11 @@
                         {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox"></i> Aucun entrepôt trouvé
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-warehouse d-block"></i>
+                                <p>Aucun entrepôt trouvé</p>
+                            </div>
                         </td>
                     </tr>
                     {% endif %}

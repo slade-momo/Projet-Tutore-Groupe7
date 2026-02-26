@@ -52,8 +52,8 @@
                             <td>{{ producteur.type_producteur }}</td>
                             <td>{{ producteur.telephone }}</td>
                             <td>
-                                <span class="badge {% if producteur.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ producteur.statut }}
+                                <span class="badge {% if producteur.statut == 'ACTIF' %}bg-success{% elif producteur.statut == 'SUSPENDU' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ producteur.get_statut_display }}
                                 </span>
                             </td>
                             <td>{{ producteur.date_inscription|date:"d/m/Y" }}</td>
@@ -72,8 +72,11 @@
                         {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox"></i> Aucun producteur trouvé
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-seedling d-block"></i>
+                                <p>Aucun producteur trouvé</p>
+                            </div>
                         </td>
                     </tr>
                     {% endif %}

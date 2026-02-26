@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ferme Mokpokpo{% endblock %}</title>
+    {% block meta_description %}
+    <meta name="description" content="Ferme Mokpokpo — Production et commercialisation de noix de cajou premium au Togo">
+    {% endblock %}
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6.4 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --clr-green-dark: #1b5e20;
+            --clr-green: #2e7d32;
+            --clr-green-light: #4caf50;
+            --clr-gold: #f9a825;
+            --clr-gold-light: #fdd835;
+            --clr-cream: #fefcf3;
+            --clr-brown: #4e342e;
+            --clr-brown-light: #6d4c41;
+            --clr-white: #ffffff;
+            --clr-gray-50: #fafafa;
+            --clr-gray-100: #f5f5f5;
+            --clr-gray-200: #eeeeee;
+            --clr-gray-600: #757575;
+            --clr-gray-800: #424242;
+            --clr-text: #212121;
+            --font-heading: 'Playfair Display', Georgia, serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,.12);
+            --radius: 12px;
+            --radius-lg: 20px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-body);
+            color: var(--clr-text);
+            background: var(--clr-white);
+            line-height: 1.6;
+        }
+
+        /* ─── NAVBAR ─── */
+        .site-navbar {
+            background: var(--clr-white);
+            border-bottom: 1px solid var(--clr-gray-200);
+            padding: 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+            background: rgba(255,255,255,.95);
+        }
+        .site-navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--clr-green-dark);
+        }
+        .nav-brand .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--clr-green), var(--clr-green-light));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+        }
+        .nav-brand h1 {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .nav-links {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--clr-gray-600);
+            font-weight: 500;
+            font-size: .92rem;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all .2s;
+        }
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--clr-green-dark);
+            background: rgba(46,125,50,.08);
+        }
+        .nav-links .btn-login {
+            background: var(--clr-green);
+            color: #fff !important;
+            padding: 8px 20px;
+            border-radius: 8px;
+            margin-left: 8px;
+        }
+        .nav-links .btn-login:hover {
+            background: var(--clr-green-dark);
+        }
+
+        /* Mobile toggle */
+        .nav-toggle { display: none; background: none; border: none; font-size: 1.5rem; color: var(--clr-green-dark); cursor: pointer; }
+        @media (max-width: 768px) {
+            .nav-toggle { display: block; }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--clr-white);
+                border-bottom: 1px solid var(--clr-gray-200);
+                padding: 16px;
+                box-shadow: var(--shadow-md);
+            }
+            .nav-links.open { display: flex; }
+            .nav-links .btn-login { margin-left: 0; text-align: center; }
+        }
+
+        /* ─── BUTTONS ─── */
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--clr-green), var(--clr-green-light));
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all .25s;
+            box-shadow: 0 4px 14px rgba(46,125,50,.3);
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46,125,50,.4);
+            color: #fff;
+        }
+        .btn-outline-custom {
+            border: 2px solid var(--clr-green);
+            color: var(--clr-green);
+            background: transparent;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all .25s;
+        }
+        .btn-outline-custom:hover {
+            background: var(--clr-green);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* ─── SECTION HELPERS ─── */
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--clr-green-dark);
+            margin-bottom: .5rem;
+        }
+        .section-subtitle {
+            color: var(--clr-gray-600);
+            font-size: 1.05rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* ─── FOOTER ─── */
+        .site-footer {
+            background: var(--clr-green-dark);
+            color: rgba(255,255,255,.85);
+            padding: 60px 0 0;
+        }
+        .site-footer h5 {
+            color: #fff;
+            font-family: var(--font-heading);
+            margin-bottom: 1rem;
+        }
+        .site-footer a {
+            color: rgba(255,255,255,.7);
+            text-decoration: none;
+            transition: color .2s;
+        }
+        .site-footer a:hover { color: var(--clr-gold-light); }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,.15);
+            padding: 20px 0;
+            margin-top: 40px;
+            text-align: center;
+            font-size: .85rem;
+            color: rgba(255,255,255,.5);
+        }
+        .footer-contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .footer-contact-item i {
+            color: var(--clr-gold);
+            width: 16px;
+            text-align: center;
+        }
+
+        /* ─── MISC ─── */
+        .badge-stock {
+            font-size: .75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .badge-en-stock { background: rgba(76,175,80,.12); color: #2e7d32; }
+        .badge-stock-faible { background: rgba(255,152,0,.12); color: #e65100; }
+        .badge-rupture { background: rgba(244,67,54,.12); color: #c62828; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="site-navbar">
+        <div class="container">
+            <a href="{% url 'home' %}" class="nav-brand">
+                <div class="brand-icon"><i class="fas fa-seedling"></i></div>
+                <h1>Ferme Mokpokpo</h1>
+            </a>
+            <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-links">
+                <li><a href="{% url 'home' %}" id="nav-accueil">Accueil</a></li>
+                <li><a href="{% url 'catalogue' %}" id="nav-produits">Catalogue</a></li>
+                <li><a href="{% url 'apropos' %}" id="nav-apropos">À propos</a></li>
+                <li><a href="{% url 'login' %}" class="btn-login"><i class="fas fa-lock fa-sm"></i> Espace Pro</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ═══ CONTENT ═══ -->
+    {% block content %}{% endblock %}
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5><i class="fas fa-seedling me-2"></i>Ferme Mokpokpo</h5>
+                    <p style="font-size:.9rem;">Spécialiste en production et commercialisation de noix de cajou premium au Togo. Qualité, traçabilité et commerce équitable depuis notre ferme jusqu'à votre table.</p>
+                </div>
+                <div class="col-lg-3 mb-4">
+                    <h5>Navigation</h5>
+                    <ul class="list-unstyled" style="font-size:.9rem;">
+                        <li class="mb-2"><a href="{% url 'home' %}"><i class="fas fa-chevron-right fa-xs me-1"></i> Accueil</a></li>
+                        <li class="mb-2"><a href="{% url 'catalogue' %}"><i class="fas fa-chevron-right fa-xs me-1"></i> Catalogue</a></li>
+                        <li class="mb-2"><a href="{% url 'apropos' %}"><i class="fas fa-chevron-right fa-xs me-1"></i> À propos</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 mb-4">
+                    <h5>Légal</h5>
+                    <ul class="list-unstyled" style="font-size:.9rem;">
+                        <li class="mb-2"><a href="#">Mentions légales</a></li>
+                        <li class="mb-2"><a href="#">Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 mb-4">
+                    <h5>Contact</h5>
+                    <div class="footer-contact-item"><i class="fas fa-envelope"></i> info@fermemokpokpo.tg</div>
+                    <div class="footer-contact-item"><i class="fas fa-phone"></i> +228 90 00 00 00</div>
+                    <div class="footer-contact-item"><i class="fas fa-map-marker-alt"></i> Lomé, Togo</div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 Ferme Mokpokpo. Tous droits réservés.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

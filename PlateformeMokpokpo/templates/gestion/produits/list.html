@@ -40,22 +40,40 @@
                         <th>Catégorie</th>
                         <th>Unité</th>
                         <th>Prix Unitaire</th>
+                        <th>Stock Physique</th>
+                        <th>Réservé</th>
+                        <th>Tampon</th>
+                        <th>Disponible</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% if produits %}
-                        {% for produit in produits %}
-                        <tr>
-                            <td><strong>{{ produit.nom }}</strong></td>
-                            <td><span class="badge bg-info">{{ produit.categorie }}</span></td>
-                            <td>{{ produit.unite }}</td>
-                            <td class="text-success fw-bold">{{ produit.prix_unitaire }} DZD</td>
+                    {% if produits_avec_stock %}
+                        {% for item in produits_avec_stock %}
+                        <tr class="{% if item.stock.en_alerte %}table-warning{% endif %}">
+                            <td><strong><a href="{% url 'produits_detail' item.produit.pk %}">{{ item.produit.nom }}</a></strong></td>
+                            <td><span class="badge bg-info">{{ item.produit.categorie }}</span></td>
+                            <td>{{ item.produit.unite }}</td>
+                            <td class="text-success fw-bold">{{ item.produit.prix_unitaire }} XOF</td>
+                            <td>{{ item.stock.stock_physique }}</td>
+                            <td><span class="text-warning">{{ item.stock.stock_reserve }}</span></td>
+                            <td><span class="text-info">{{ item.stock.stock_tampon_comptoir }}</span></td>
                             <td>
-                                <a href="{% url 'produits_update' produit.pk %}" class="btn btn-sm btn-warning">
+                                <span class="fw-bold {% if item.stock.en_alerte %}text-danger{% else %}text-success{% endif %}">
+                                    {{ item.stock.stock_disponible }}
+                                </span>
+                                {% if item.stock.en_alerte %}
+                                <i class="fas fa-exclamation-triangle text-danger" title="Sous le seuil d'alerte"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'produits_detail' item.produit.pk %}" class="btn btn-sm btn-info text-white">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'produits_update' item.produit.pk %}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'produits_delete' produit.pk %}" class="btn btn-sm btn-danger">
+                                <a href="{% url 'produits_delete' item.produit.pk %}" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </td>
@@ -63,8 +81,11 @@
                         {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox"></i> Aucun produit trouvé
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="fas fa-box d-block"></i>
+                                <p>Aucun produit trouvé</p>
+                            </div>
                         </td>
                     </tr>
                     {% endif %}

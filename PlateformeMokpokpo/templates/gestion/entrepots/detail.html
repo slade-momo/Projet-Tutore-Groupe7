@@ -13,17 +13,22 @@
                     <i class="fas fa-info-circle"></i> Informations
                 </div>
                 <div class="card-body">
-                    <p><strong>Nom:</strong> {{ entrepot.nom }}</p>
-                    <p><strong>Localisation:</strong> {{ entrepot.localisation }}</p>
-                    <p><strong>Responsable:</strong> {{ entrepot.responsable }}</p>
-                    <p><strong>Capacité Max:</strong> {{ entrepot.capacite_max }}</p>
-                    <p><strong>Quantité Disponible:</strong> {{ entrepot.quantite_disponible }}</p>
-                    <p><strong>Seuil Critique:</strong> {{ entrepot.seuil_critique }}</p>
-                    <p><strong>Statut:</strong> 
-                        <span class="badge {% if entrepot.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">
-                            {{ entrepot.statut }}
-                        </span>
-                    </p>
+                    <div class="d-flex flex-column gap-3">
+                        <div><small class="text-muted d-block" style="font-size:11px;">Nom</small><strong>{{ entrepot.nom }}</strong></div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Localisation</small>{{ entrepot.localisation }}</div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Responsable</small>{{ entrepot.responsable }}</div>
+                        <div class="row g-2">
+                            <div class="col-4"><small class="text-muted d-block" style="font-size:11px;">Capacité</small><strong>{{ entrepot.capacite_max }}</strong></div>
+                            <div class="col-4"><small class="text-muted d-block" style="font-size:11px;">Disponible</small><strong class="text-success">{{ entrepot.quantite_disponible }}</strong></div>
+                            <div class="col-4"><small class="text-muted d-block" style="font-size:11px;">Seuil</small><strong class="text-warning">{{ entrepot.seuil_critique }}</strong></div>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block" style="font-size:11px;">Statut</small>
+                            <span class="badge {% if entrepot.statut == 'OPERATIONNEL' %}bg-success{% elif entrepot.statut == 'EN_ALERTE' %}bg-warning text-dark{% elif entrepot.statut == 'CRITIQUE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ entrepot.get_statut_display }}
+                            </span>
+                        </div>
+                    </div>
                     <div class="d-flex gap-2 mt-3">
                         <a href="{% url 'entrepots_update' entrepot.pk %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit"></i>
@@ -71,7 +76,12 @@
                                 {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Aucune zone trouvée</td>
+                                <td colspan="6">
+                                    <div class="empty-state" style="padding:24px;">
+                                        <i class="fas fa-th-large d-block"></i>
+                                        <p>Aucune zone trouvée</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endif %}
                         </tbody>

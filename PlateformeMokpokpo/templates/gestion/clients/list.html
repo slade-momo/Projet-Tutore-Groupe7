@@ -2,7 +2,7 @@
 
 {% block title %}Clients{% endblock %}
 {% block page_title %}Gestion des Clients{% endblock %}
-{% block breadcrumbs %}<a href="{% url 'dashboard' %}">Tableau de bord</a> > Clients{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Clients{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -61,7 +61,12 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">Aucun client trouvé</td>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-users d-block"></i>
+                                <p>Aucun client trouvé</p>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

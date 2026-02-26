@@ -5,70 +5,159 @@
 {% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'produits_list' %}">Produits</a> / {{ title }}{% endblock %}
 
 {% block content %}
+<style>
+    .section-card { border: 1px solid var(--clr-border); border-radius: var(--radius-lg); background: var(--clr-surface); box-shadow: var(--shadow-sm); transition: box-shadow var(--transition); }
+    .section-card:hover { box-shadow: var(--shadow-md); }
+    .section-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--clr-border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; align-items: center; gap: .6rem; }
+    .section-header .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; color: #fff; flex-shrink: 0; }
+    .section-header h6 { margin: 0; font-weight: 600; font-size: .95rem; color: var(--clr-text); }
+    .section-header small { color: var(--clr-text-muted); font-size: .8rem; }
+    .section-body { padding: 1.25rem; }
+    .form-label { font-weight: 500; font-size: .85rem; color: var(--clr-text); margin-bottom: .35rem; }
+    .form-hint { font-size: .75rem; color: var(--clr-text-muted); margin-top: .25rem; display: block; }
+
+    .btn-actions { display: flex; gap: .75rem; padding-top: 1rem; }
+    .btn-actions .btn { padding: .6rem 1.5rem; font-weight: 500; border-radius: var(--radius); }
+</style>
+
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-box"></i> {{ title }}
-                </div>
-                <div class="card-body">
-                    <form method="POST" novalidate>
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.nom.label }}</label>
+    <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4">
+            {% for error in form.non_field_errors %}<p class="mb-0">{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Colonne gauche -->
+            <div class="col-lg-7">
+                <!-- Informations générales -->
+                <div class="section-card mb-4">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-accent);"><i class="fas fa-box"></i></span>
+                        <div>
+                            <h6>Informations générales</h6>
+                            <small>Identité et caractéristiques du produit</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }} <span class="text-danger">*</span></label>
                                 {{ form.nom }}
-                                {% if form.nom.errors %}
-                                <small class="text-danger">{{ form.nom.errors.0 }}</small>
-                                {% endif %}
+                                {% if form.nom.errors %}<small class="text-danger">{{ form.nom.errors.0 }}</small>{% endif %}
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.categorie.label }}</label>
-                                {{ form.categorie }}
-                                {% if form.categorie.errors %}
-                                <small class="text-danger">{{ form.categorie.errors.0 }}</small>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.unite.label }}</label>
+                            <div class="col-md-4">
+                                <label for="{{ form.unite.id_for_label }}" class="form-label">{{ form.unite.label }}</label>
                                 {{ form.unite }}
-                                {% if form.unite.errors %}
-                                <small class="text-danger">{{ form.unite.errors.0 }}</small>
-                                {% endif %}
+                                {% if form.unite.errors %}<small class="text-danger">{{ form.unite.errors.0 }}</small>{% endif %}
+                                <span class="form-hint">ex : kg, tonne, sac…</span>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.prix_unitaire.label }}</label>
-                                {{ form.prix_unitaire }}
-                                {% if form.prix_unitaire.errors %}
-                                <small class="text-danger">{{ form.prix_unitaire.errors.0 }}</small>
-                                {% endif %}
+                            <div class="col-md-6">
+                                <label for="{{ form.categorie.id_for_label }}" class="form-label">{{ form.categorie.label }}</label>
+                                {{ form.categorie }}
+                                {% if form.categorie.errors %}<small class="text-danger">{{ form.categorie.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.prix_unitaire.id_for_label }}" class="form-label">{{ form.prix_unitaire.label }}</label>
+                                <div class="input-group">
+                                    {{ form.prix_unitaire }}
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                                {% if form.prix_unitaire.errors %}<small class="text-danger">{{ form.prix_unitaire.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}<small class="text-danger">{{ form.description.errors.0 }}</small>{% endif %}
                             </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">{{ form.description.label }}</label>
-                            {{ form.description }}
-                            {% if form.description.errors %}
-                            <small class="text-danger">{{ form.description.errors.0 }}</small>
-                            {% endif %}
+                    </div>
+                </div>
+
+                <!-- Seuils & Approvisionnement -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-warning);"><i class="fas fa-bell"></i></span>
+                        <div>
+                            <h6>Seuils & Approvisionnement</h6>
+                            <small>Paramètres d'alerte et de réapprovisionnement</small>
                         </div>
-                        
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Enregistrer
-                            </button>
-                            <a href="{% url 'produits_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Annuler
-                            </a>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.seuil_alerte.id_for_label }}" class="form-label">{{ form.seuil_alerte.label }}</label>
+                                {{ form.seuil_alerte }}
+                                <span class="form-hint"><i class="fas fa-exclamation-triangle text-warning"></i> Alerte déclenchée si stock &lt; seuil</span>
+                                {% if form.seuil_alerte.errors %}<small class="text-danger">{{ form.seuil_alerte.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.quantite_optimale_commande.id_for_label }}" class="form-label">{{ form.quantite_optimale_commande.label }}</label>
+                                {{ form.quantite_optimale_commande }}
+                                <span class="form-hint">Quantité suggérée par commande d'achat</span>
+                                {% if form.quantite_optimale_commande.errors %}<small class="text-danger">{{ form.quantite_optimale_commande.errors.0 }}</small>{% endif %}
+                            </div>
                         </div>
-                    </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne droite : Stocks -->
+            <div class="col-lg-5">
+                <div class="section-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-success);"><i class="fas fa-cubes"></i></span>
+                        <div>
+                            <h6>Niveaux de stock</h6>
+                            <small>Quantités actuelles du produit</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="{{ form.stock_physique.id_for_label }}" class="form-label">
+                                    <i class="fas fa-warehouse text-primary me-1"></i> {{ form.stock_physique.label }}
+                                </label>
+                                {{ form.stock_physique }}
+                                <span class="form-hint">Quantité totale physiquement en entrepôt</span>
+                                {% if form.stock_physique.errors %}<small class="text-danger">{{ form.stock_physique.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.stock_reserve.id_for_label }}" class="form-label">
+                                    <i class="fas fa-lock text-info me-1"></i> {{ form.stock_reserve.label }}
+                                </label>
+                                {{ form.stock_reserve }}
+                                <span class="form-hint">Réservé pour commandes</span>
+                                {% if form.stock_reserve.errors %}<small class="text-danger">{{ form.stock_reserve.errors.0 }}</small>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.stock_tampon_comptoir.id_for_label }}" class="form-label">
+                                    <i class="fas fa-shield-alt text-secondary me-1"></i> {{ form.stock_tampon_comptoir.label }}
+                                </label>
+                                {{ form.stock_tampon_comptoir }}
+                                <span class="form-hint">Stock tampon de sécurité</span>
+                                {% if form.stock_tampon_comptoir.errors %}<small class="text-danger">{{ form.stock_tampon_comptoir.errors.0 }}</small>{% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="btn-actions mt-4">
+                    <button type="submit" class="btn btn-success flex-grow-1">
+                        <i class="fas fa-save me-1"></i> Enregistrer
+                    </button>
+                    <a href="{% url 'produits_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}
+

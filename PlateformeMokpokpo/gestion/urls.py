@@ -15,6 +15,7 @@ urlpatterns = [
     # Produits
     path('produits/', views.produits_list, name='produits_list'),
     path('produits/create/', views.produits_create, name='produits_create'),
+    path('produits/<int:pk>/', views.produits_detail, name='produits_detail'),
     path('produits/<int:pk>/update/', views.produits_update, name='produits_update'),
     path('produits/<int:pk>/delete/', views.produits_delete, name='produits_delete'),
     
@@ -48,6 +49,7 @@ urlpatterns = [
     # Ventes
     path('ventes/', views.ventes_list, name='ventes_list'),
     path('ventes/create/', views.ventes_create, name='ventes_create'),
+    path('ventes/<int:pk>/', views.ventes_detail, name='ventes_detail'),
     path('ventes/<int:pk>/update/', views.ventes_update, name='ventes_update'),
     path('ventes/<int:pk>/delete/', views.ventes_delete, name='ventes_delete'),
     
@@ -58,7 +60,37 @@ urlpatterns = [
     
     # Historique
     path('historique/', views.historique_list, name='historique_list'),
+    path('historique/<int:pk>/', views.historique_detail, name='historique_detail'),
 
     # Prévisions de stock
     path('stock-forecast/', views.stock_forecast_view, name='stock_prediction'),
+
+    # Commandes
+    path('commandes/', views.commandes_list, name='commandes_list'),
+    path('commandes/create/', views.commandes_create, name='commandes_create'),
+    path('commandes/<int:pk>/', views.commandes_detail, name='commandes_detail'),
+    path('commandes/<int:pk>/update/', views.commandes_update, name='commandes_update'),
+    path('commandes/<int:pk>/delete/', views.commandes_delete, name='commandes_delete'),
+    path('commandes/<int:pk>/accepter/', views.commande_accepter_view, name='commande_accepter'),
+    path('commandes/<int:pk>/confirmer/', views.commande_confirmer_view, name='commande_confirmer'),
+    path('commandes/<int:pk>/livrer/', views.commande_livrer_view, name='commande_livrer'),
+
+    # Alertes de stock
+    path('alertes/', views.alertes_list, name='alertes_list'),
+    path('alertes/<int:pk>/generer-da/', views.alerte_generer_da_view, name='alerte_generer_da'),
+    path('alertes/<int:pk>/traiter/', views.alerte_traiter_view, name='alerte_traiter'),
+
+    # Demandes d'achat
+    path('demandes/', views.demandes_list, name='demandes_list'),
+    path('demandes/create/', views.demandes_create, name='demandes_create'),
+    path('demandes/<int:pk>/<str:action>/', views.demande_action_view, name='demande_action'),
+
+    # Ventes immédiates
+    path('ventes-immediates/', views.ventes_immediates_list, name='ventes_immediates_list'),
+    path('ventes-immediates/create/', views.ventes_immediates_create, name='ventes_immediates_create'),
+    path('ventes-immediates/<int:pk>/delete/', views.ventes_immediates_delete, name='ventes_immediates_delete'),
+
+    # API endpoints (AJAX)
+    path('api/stock/<int:pk>/', views.api_stock_produit, name='api_stock_produit'),
+    path('api/check-disponibilite-vi/', views.api_check_disponibilite_vi, name='api_check_disponibilite_vi'),
 ]

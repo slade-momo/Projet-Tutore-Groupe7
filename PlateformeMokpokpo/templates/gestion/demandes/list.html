@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Demandes d'Achat - Plateforme de Gestion{% endblock %}
+{% block page_title %}Demandes d'Achat{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Demandes d'Achat{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex gap-2">
+                <select name="statut" class="form-select" style="max-width: 200px;">
+                    <option value="">Tous les statuts</option>
+                    <option value="BROUILLON" {% if statut_filter == 'BROUILLON' %}selected{% endif %}>Brouillon</option>
+                    <option value="ENVOYEE" {% if statut_filter == 'ENVOYEE' %}selected{% endif %}>Envoyée</option>
+                    <option value="VALIDEE" {% if statut_filter == 'VALIDEE' %}selected{% endif %}>Validée</option>
+                    <option value="COMMANDEE" {% if statut_filter == 'COMMANDEE' %}selected{% endif %}>Commandée</option>
+                    <option value="RECEPTIONNEE" {% if statut_filter == 'RECEPTIONNEE' %}selected{% endif %}>Réceptionnée</option>
+                    <option value="ANNULEE" {% if statut_filter == 'ANNULEE' %}selected{% endif %}>Annulée</option>
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filtrer
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'demandes_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nouvelle Demande
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-clipboard-list"></i> Liste des Demandes d'Achat ({{ demandes|length }})
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>N° DA</th>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Stock Actuel</th>
+                        <th>Seuil</th>
+                        <th>Priorité</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for demande in demandes %}
+                    <tr>
+                        <td><strong>{{ demande.numero_da }}</strong></td>
+                        <td>
+                            {% if demande.produit %}
+                            <a href="{% url 'produits_detail' demande.produit.pk %}">{{ demande.produit.nom }}</a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>{{ demande.quantite_a_commander }}</td>
+                        <td>{{ demande.stock_actuel|default:"—" }}</td>
+                        <td>{{ demande.seuil_alerte|default:"—" }}</td>
+                        <td>
+                            <span class="badge {% if demande.priorite == 'URGENT' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ demande.get_priorite_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {% if demande.statut == 'BROUILLON' %}bg-secondary{% elif demande.statut == 'ENVOYEE' %}bg-primary{% elif demande.statut == 'VALIDEE' %}bg-success{% elif demande.statut == 'ANNULEE' %}bg-danger{% elif demande.statut == 'COMMANDEE' %}bg-info{% elif demande.statut == 'RECEPTIONNEE' %}bg-dark{% else %}bg-dark{% endif %}">
+                                {{ demande.get_statut_display }}
+                            </span>
+                        </td>
+                        <td>{{ demande.date_creation|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if demande.statut == 'BROUILLON' %}
+                            <form method="post" action="{% url 'demande_action' demande.pk 'envoyer' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary" title="Envoyer au service achats">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if demande.statut == 'ENVOYEE' %}
+                            <form method="post" action="{% url 'demande_action' demande.pk 'valider' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Valider">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if demande.statut == 'VALIDEE' %}
+                            <form method="post" action="{% url 'demande_action' demande.pk 'commander' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-info text-white" title="Émettre le bon de commande">
+                                    <i class="fas fa-file-invoice"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if demande.statut == 'COMMANDEE' %}
+                            <form method="post" action="{% url 'demande_action' demande.pk 'receptionner' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-dark" title="Réceptionner (met à jour le stock)">
+                                    <i class="fas fa-download"></i> Réceptionner
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if demande.statut != 'RECEPTIONNEE' and demande.statut != 'ANNULEE' %}
+                            <form method="post" action="{% url 'demande_action' demande.pk 'annuler' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Annuler">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="fas fa-clipboard-list d-block"></i>
+                                <p>Aucune demande d'achat</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

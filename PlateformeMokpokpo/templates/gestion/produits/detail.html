@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}{{ produit.nom }} - Détail Produit{% endblock %}
+{% block page_title %}Détail du Produit{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'produits_list' %}">Produits</a> / {{ produit.nom }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Infos produit -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-box"></i> {{ produit.nom }}</span>
+                    <a href="{% url 'produits_update' produit.pk %}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th style="width: 40%; color: var(--clr-text-muted);">Nom</th>
+                            <td class="fw-bold">{{ produit.nom }}</td>
+                        </tr>
+                        <tr>
+                            <th style="color: var(--clr-text-muted);">Catégorie</th>
+                            <td><span class="badge bg-info">{{ produit.categorie }}</span></td>
+                        </tr>
+                        <tr>
+                            <th style="color: var(--clr-text-muted);">Unité</th>
+                            <td>{{ produit.unite }}</td>
+                        </tr>
+                        <tr>
+                            <th style="color: var(--clr-text-muted);">Prix Unitaire</th>
+                            <td class="fw-bold" style="color: var(--clr-success);">{{ produit.prix_unitaire }} XOF</td>
+                        </tr>
+                        <tr>
+                            <th style="color: var(--clr-text-muted);">Seuil Alerte</th>
+                            <td>{{ produit.seuil_alerte|default:"Non défini" }}</td>
+                        </tr>
+                        <tr>
+                            <th style="color: var(--clr-text-muted);">Qté Optimale Commande</th>
+                            <td>{{ produit.quantite_optimale_commande|default:"Non défini" }}</td>
+                        </tr>
+                        <tr>
+                            <th style="color: var(--clr-text-muted);">Description</th>
+                            <td>{{ produit.description|default:"—" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock séparé -->
+        <div class="col-lg-6 mb-4">
+            <div class="card" style="{% if stock_info.en_alerte %}border-color: var(--clr-danger);{% else %}border-color: var(--clr-success);{% endif %}">
+                <div class="card-header">
+                    <i class="fas fa-warehouse" style="{% if stock_info.en_alerte %}color: var(--clr-danger) !important;{% else %}color: var(--clr-success) !important;{% endif %}"></i>
+                    <span>État du Stock</span>
+                    {% if stock_info.en_alerte %}
+                    <span class="badge bg-danger ms-auto"><i class="fas fa-exclamation-triangle"></i> ALERTE</span>
+                    {% else %}
+                    <span class="badge bg-success ms-auto"><i class="fas fa-check-circle"></i> OK</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center mb-3">
+                        <div class="col-6 col-md-3">
+                            <div style="background: var(--clr-bg); border-radius: var(--radius); padding: 14px 8px;">
+                                <small class="text-muted d-block" style="font-size:11px;">Physique</small>
+                                <span class="fs-4 fw-bold" style="color: var(--clr-primary);">{{ stock_info.stock_physique }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div style="background: var(--clr-bg); border-radius: var(--radius); padding: 14px 8px;">
+                                <small class="text-muted d-block" style="font-size:11px;">Réservé</small>
+                                <span class="fs-4 fw-bold" style="color: var(--clr-warning);">{{ stock_info.stock_reserve }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div style="background: var(--clr-bg); border-radius: var(--radius); padding: 14px 8px;">
+                                <small class="text-muted d-block" style="font-size:11px;">Tampon</small>
+                                <span class="fs-4 fw-bold" style="color: var(--clr-info);">{{ stock_info.stock_tampon_comptoir }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div style="{% if stock_info.en_alerte %}background: rgba(239,68,68,.08);{% else %}background: rgba(16,185,129,.08);{% endif %} border-radius: var(--radius); padding: 14px 8px;">
+                                <small class="text-muted d-block" style="font-size:11px;">Disponible</small>
+                                <span class="fs-4 fw-bold {% if stock_info.en_alerte %}text-danger{% else %}text-success{% endif %}">{{ stock_info.stock_disponible }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted">Seuil d'alerte : {{ stock_info.seuil_alerte }}</small>
+                        {% if stock_info.stock_physique > 0 %}
+                        <div class="progress mt-2" style="height: 8px;">
+                            {% widthratio stock_info.stock_reserve stock_info.stock_physique 100 as pct_reserve %}
+                            {% widthratio stock_info.stock_tampon_comptoir stock_info.stock_physique 100 as pct_tampon %}
+                            {% widthratio stock_info.stock_disponible stock_info.stock_physique 100 as pct_dispo %}
+                            <div class="progress-bar bg-warning" style="width: {{ pct_reserve }}%" title="Réservé"></div>
+                            <div class="progress-bar bg-info" style="width: {{ pct_tampon }}%" title="Tampon"></div>
+                            <div class="progress-bar bg-success" style="width: {{ pct_dispo }}%" title="Disponible"></div>
+                        </div>
+                        <div class="d-flex justify-content-center gap-3 mt-2">
+                            <small><span class="badge bg-warning">&nbsp;</span> Réservé</small>
+                            <small><span class="badge bg-info">&nbsp;</span> Tampon</small>
+                            <small><span class="badge bg-success">&nbsp;</span> Disponible</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commandes actives & Ventes récentes -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-clipboard-list"></i> Commandes actives
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Réf</th>
+                                <th>Client</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cmd in commandes_actives %}
+                            <tr>
+                                <td><a href="{% url 'commandes_detail' cmd.pk %}">{{ cmd.reference }}</a></td>
+                                <td>{{ cmd.client }}</td>
+                                <td>
+                                    <span class="badge {% if cmd.statut == 'CONFIRMEE' %}bg-primary{% elif cmd.statut == 'RESERVEE' %}bg-info{% elif cmd.statut == 'EN_ATTENTE_REAPPRO' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {{ cmd.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td class="text-muted">{{ cmd.date_commande|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state" style="padding: 24px;">
+                                        <i class="fas fa-clipboard-list d-block"></i>
+                                        <p>Aucune commande active</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cash-register"></i> Ventes récentes
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Réf</th>
+                                <th>Client</th>
+                                <th>Type</th>
+                                <th>Qté</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vi in ventes_recentes %}
+                            <tr>
+                                <td><strong>{{ vi.numero_vente }}</strong></td>
+                                <td>{{ vi.client|default:"—" }}</td>
+                                <td>
+                                    <span class="badge {% if vi.type_vente == 'TOTALE' %}bg-success{% elif vi.type_vente == 'PARTIELLE' %}bg-primary{% elif vi.type_vente == 'URGENTE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        {{ vi.get_type_vente_display }}
+                                    </span>
+                                </td>
+                                <td>{{ vi.quantite_demandee }}</td>
+                                <td class="text-muted">{{ vi.date_vente|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state" style="padding: 24px;">
+                                        <i class="fas fa-cash-register d-block"></i>
+                                        <p>Aucune vente récente</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demandes d'achat actives & Alertes -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-shopping-cart"></i> Demandes d'achat actives
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Réf</th>
+                                <th>Qté</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for da in demandes_actives %}
+                            <tr>
+                                <td>{{ da.reference }}</td>
+                                <td>{{ da.quantite }}</td>
+                                <td>
+                                    <span class="badge {% if da.statut == 'BROUILLON' %}bg-secondary{% elif da.statut == 'ENVOYEE' %}bg-info{% elif da.statut == 'VALIDEE' %}bg-primary{% elif da.statut == 'COMMANDEE' %}bg-warning{% elif da.statut == 'RECEPTIONNEE' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ da.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td class="text-muted">{{ da.date_creation|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state" style="padding: 24px;">
+                                        <i class="fas fa-shopping-cart d-block"></i>
+                                        <p>Aucune demande d'achat</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bell"></i> Alertes récentes
+                </div>
+                <div class="card-body">
+                    {% if alertes %}
+                    <div class="d-flex flex-column gap-2">
+                        {% for alerte in alertes %}
+                        <div class="d-flex justify-content-between align-items-center" style="padding: 10px 14px; background: var(--clr-bg); border-radius: var(--radius);">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge {% if alerte.statut == 'ACTIVE' %}bg-danger{% elif alerte.statut == 'TRAITEE' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ alerte.get_statut_display }}
+                                </span>
+                                <span style="font-size:13px;">Stock: <strong>{{ alerte.stock_actuel }}</strong> / Seuil: {{ alerte.seuil_alerte }}</span>
+                            </div>
+                            <small class="text-muted">{{ alerte.date_alerte|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state" style="padding: 24px;">
+                        <i class="fas fa-check-circle d-block" style="color: var(--clr-success);"></i>
+                        <p>Aucune alerte</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lots du produit -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cubes"></i> Lots de ce produit ({{ total_lots }})
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Code Lot</th>
+                                <th>Producteur</th>
+                                <th>Zone</th>
+                                <th>Quantité</th>
+                                <th>Réservée</th>
+                                <th>Date Création</th>
+                                <th>Date Expiration</th>
+                                <th>Qualité</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lot in lots %}
+                            <tr>
+                                <td><a href="{% url 'lots_detail' lot.pk %}"><strong>{{ lot.code_lot }}</strong></a></td>
+                                <td>{{ lot.producteur.nom|default:"—" }}</td>
+                                <td>{{ lot.zone.nom|default:"—" }}</td>
+                                <td class="fw-bold">{{ lot.quantite }}</td>
+                                <td><span class="text-warning fw-bold">{{ lot.quantite_reservee|default:"0" }}</span></td>
+                                <td class="text-muted">{{ lot.date_creation|date:"d/m/Y" }}</td>
+                                <td class="text-muted">{{ lot.date_expiration|date:"d/m/Y" }}</td>
+                                <td><span class="badge bg-secondary">{{ lot.qualite }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="fas fa-cubes d-block"></i>
+                                        <p>Aucun lot pour ce produit</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

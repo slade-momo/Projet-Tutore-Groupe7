@@ -1,0 +1,536 @@
+{% extends "base.html" %}
+
+{% block title %}Centre d'Alertes - Plateforme de Gestion{% endblock %}
+{% block page_title %}Centre d'Alertes & Surveillance{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Centre d'Alertes{% endblock %}
+
+{% block content %}
+<style>
+    /* ─── KPI Cards ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card {
+        background: var(--clr-surface);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow);
+        display: flex; align-items: center; gap: 16px;
+        transition: transform var(--transition), box-shadow var(--transition);
+        position: relative; overflow: hidden;
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .kpi-card .kpi-icon {
+        width: 52px; height: 52px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; flex-shrink: 0;
+    }
+    .kpi-card .kpi-value { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -.5px; }
+    .kpi-card .kpi-label { font-size: 12px; color: var(--clr-text-muted); font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+    .kpi-card .kpi-extra { font-size: 11px; font-weight: 600; margin-top: 4px; }
+
+    .kpi-icon.kpi-danger { background: rgba(239,68,68,.12); color: var(--clr-danger); }
+    .kpi-icon.kpi-warning { background: rgba(245,158,11,.12); color: var(--clr-warning); }
+    .kpi-icon.kpi-success { background: rgba(16,185,129,.12); color: var(--clr-success); }
+    .kpi-icon.kpi-info { background: rgba(6,182,212,.12); color: var(--clr-info); }
+    .kpi-icon.kpi-primary { background: rgba(59,130,246,.12); color: var(--clr-accent); }
+
+    /* ─── Severity Badges ─── */
+    .badge-severity-critique { background: var(--clr-danger); color: #fff; animation: pulse-badge 2s infinite; }
+    .badge-severity-urgent { background: var(--clr-warning); color: #fff; }
+    .badge-severity-attention { background: #fb923c; color: #fff; }
+
+    @keyframes pulse-badge {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .7; }
+    }
+
+    /* ─── Progress Bars ─── */
+    .stock-progress { height: 8px; border-radius: 4px; background: var(--clr-border); overflow: hidden; flex: 1; }
+    .stock-progress-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+    .stock-progress-fill.danger { background: linear-gradient(90deg, #dc2626, #ef4444); }
+    .stock-progress-fill.warning { background: linear-gradient(90deg, #d97706, #f59e0b); }
+    .stock-progress-fill.ok { background: linear-gradient(90deg, #059669, #10b981); }
+
+    /* ─── Resolution Gauge ─── */
+    .gauge-container { position: relative; width: 80px; height: 80px; margin: 0 auto; }
+    .gauge-circle {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+    .gauge-bg { fill: none; stroke: var(--clr-border); stroke-width: 6; }
+    .gauge-fill { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+    .gauge-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 18px; font-weight: 800; }
+
+    /* ─── Section Cards ─── */
+    .section-card {
+        background: var(--clr-surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .section-card .section-header {
+        padding: 16px 20px;
+        font-weight: 700;
+        font-size: 15px;
+        border-bottom: 1px solid var(--clr-border);
+        display: flex; align-items: center; gap: 10px;
+    }
+
+    /* ─── Alert Table ─── */
+    .alert-row { transition: background var(--transition); }
+    .alert-row:hover { background: rgba(59,130,246,.04); }
+    .alert-row.active-alert { border-left: 3px solid var(--clr-danger); }
+    .alert-row.treated-alert { border-left: 3px solid var(--clr-success); }
+    .alert-row.ignored-alert { border-left: 3px solid var(--clr-text-muted); }
+
+    /* ─── Critical Product Card ─── */
+    .critic-item {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--clr-border);
+        display: flex; align-items: center; gap: 12px;
+        transition: background var(--transition);
+    }
+    .critic-item:last-child { border-bottom: none; }
+    .critic-item:hover { background: rgba(239,68,68,.03); }
+    .critic-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; flex-shrink: 0;
+    }
+    .critic-icon.critique { background: rgba(239,68,68,.12); color: var(--clr-danger); }
+    .critic-icon.urgent { background: rgba(245,158,11,.12); color: var(--clr-warning); }
+    .critic-icon.attention { background: rgba(251,146,60,.12); color: #fb923c; }
+
+    /* ─── Filter Bar ─── */
+    .filter-bar {
+        background: var(--clr-surface);
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+    }
+
+    /* ─── Expiry Card ─── */
+    .expiry-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--clr-border);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .expiry-item:last-child { border-bottom: none; }
+    .days-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .days-badge.critical { background: rgba(239,68,68,.12); color: var(--clr-danger); }
+    .days-badge.soon { background: rgba(245,158,11,.12); color: var(--clr-warning); }
+
+    /* ─── Timeline Treatment ─── */
+    .treatment-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--clr-border);
+        display: flex; gap: 12px; align-items: flex-start;
+    }
+    .treatment-item:last-child { border-bottom: none; }
+    .treatment-dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--clr-success); margin-top: 5px; flex-shrink: 0;
+    }
+
+    /* ─── Empty state ─── */
+    .empty-panel {
+        padding: 40px 20px; text-align: center; color: var(--clr-text-muted);
+    }
+    .empty-panel i { font-size: 36px; margin-bottom: 12px; display: block; }
+</style>
+
+<div class="container-fluid">
+
+    <!-- ═══════ KPI CARDS ═══════ -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-danger"><i class="fas fa-exclamation-triangle"></i></div>
+            <div>
+                <div class="kpi-value" style="color:var(--clr-danger)">{{ alertes_actives }}</div>
+                <div class="kpi-label">Alertes Actives</div>
+                {% if alertes_actives > 0 %}
+                <div class="kpi-extra" style="color:var(--clr-danger)"><i class="fas fa-arrow-up"></i> Nécessitent une action</div>
+                {% else %}
+                <div class="kpi-extra" style="color:var(--clr-success)"><i class="fas fa-check"></i> Tout est normal</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-warning"><i class="fas fa-cubes"></i></div>
+            <div>
+                <div class="kpi-value" style="color:var(--clr-warning)">{{ nb_produits_critiques }}</div>
+                <div class="kpi-label">Produits Critiques</div>
+                <div class="kpi-extra" style="color:var(--clr-warning)">Stock &lt; seuil d'alerte</div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-success"><i class="fas fa-check-double"></i></div>
+            <div>
+                <div class="kpi-value" style="color:var(--clr-success)">{{ alertes_traitees }}</div>
+                <div class="kpi-label">Alertes Traitées</div>
+                <div class="kpi-extra" style="color:var(--clr-success)">Résolues avec succès</div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-info"><i class="fas fa-clipboard-list"></i></div>
+            <div>
+                <div class="kpi-value" style="color:var(--clr-info)">{{ alertes_avec_da }}</div>
+                <div class="kpi-label">DA Générées</div>
+                <div class="kpi-extra" style="color:var(--clr-info)">Demandes d'achat créées</div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-primary"><i class="fas fa-chart-pie"></i></div>
+            <div>
+                <div class="kpi-value" style="color:var(--clr-accent)">{{ taux_resolution }}%</div>
+                <div class="kpi-label">Taux Résolution</div>
+                <div class="kpi-extra" style="color:var(--clr-accent)">{{ alertes_traitees }}/{{ total_alertes }} alertes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ FILTER BAR ═══════ -->
+    <div class="filter-bar">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold" style="font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--clr-text-muted)">
+                    <i class="fas fa-search"></i> Recherche
+                </label>
+                <input type="text" name="search" class="form-control" placeholder="Nom du produit..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold" style="font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--clr-text-muted)">
+                    <i class="fas fa-tag"></i> Statut
+                </label>
+                <select name="statut" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="ACTIVE" {% if statut_filter == 'ACTIVE' %}selected{% endif %}>🔴 Active</option>
+                    <option value="TRAITEE" {% if statut_filter == 'TRAITEE' %}selected{% endif %}>🟢 Traitée</option>
+                    <option value="IGNOREE" {% if statut_filter == 'IGNOREE' %}selected{% endif %}>⚪ Ignorée</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold" style="font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--clr-text-muted)">
+                    <i class="fas fa-fire"></i> Sévérité
+                </label>
+                <select name="priorite" class="form-select">
+                    <option value="">Toutes sévérités</option>
+                    <option value="CRITIQUE" {% if priorite_filter == 'CRITIQUE' %}selected{% endif %}>🔴 Critique (≤25%)</option>
+                    <option value="URGENT" {% if priorite_filter == 'URGENT' %}selected{% endif %}>🟠 Urgent (25-50%)</option>
+                    <option value="ATTENTION" {% if priorite_filter == 'ATTENTION' %}selected{% endif %}>🟡 Attention (&gt;50%)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Filtrer
+                </button>
+            </div>
+            {% if statut_filter or search_query or priorite_filter %}
+            <div class="col-md-2">
+                <a href="{% url 'alertes_list' %}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times"></i> Réinitialiser
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="row">
+        <!-- ═══════ LEFT COLUMN — Main Table ═══════ -->
+        <div class="col-lg-8">
+
+            <!-- Alertes Table -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-bell" style="color:var(--clr-danger)"></i>
+                    Alertes de Stock
+                    <span class="badge bg-dark ms-auto">{{ alertes|length }}</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" style="font-size:13px;">
+                        <thead>
+                            <tr style="background:var(--clr-bg);">
+                                <th style="padding:10px 16px;">Produit</th>
+                                <th>Statut</th>
+                                <th>Stock</th>
+                                <th>Seuil</th>
+                                <th>Niveau</th>
+                                <th>DA</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alerte in alertes %}
+                            <tr class="alert-row {% if alerte.statut == 'ACTIVE' %}active-alert{% elif alerte.statut == 'TRAITEE' %}treated-alert{% else %}ignored-alert{% endif %}">
+                                <td style="padding:12px 16px;">
+                                    {% if alerte.produit %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(59,130,246,.1);display:flex;align-items:center;justify-content:center;">
+                                            <i class="fas fa-box" style="color:var(--clr-accent);font-size:13px;"></i>
+                                        </div>
+                                        <div>
+                                            <a href="{% url 'produits_detail' alerte.produit.pk %}" class="fw-semibold text-decoration-none" style="color:var(--clr-text)">{{ alerte.produit.nom }}</a>
+                                            {% if alerte.produit.categorie %}
+                                            <div style="font-size:11px;color:var(--clr-text-muted)">{{ alerte.produit.categorie }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>
+                                    {% if alerte.statut == 'ACTIVE' %}
+                                    <span class="badge bg-danger"><i class="fas fa-exclamation-circle"></i> Active</span>
+                                    {% elif alerte.statut == 'TRAITEE' %}
+                                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Traitée</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary"><i class="fas fa-eye-slash"></i> Ignorée</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="fw-bold {% if alerte.stock_actuel <= alerte.seuil_alerte %}text-danger{% else %}text-success{% endif %}">
+                                        {{ alerte.stock_actuel }}
+                                    </span>
+                                </td>
+                                <td>{{ alerte.seuil_alerte }}</td>
+                                <td style="min-width:120px;">
+                                    {% if alerte.seuil_alerte and alerte.seuil_alerte > 0 %}
+                                    {% widthratio alerte.stock_actuel alerte.seuil_alerte 100 as pct %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="stock-progress">
+                                            <div class="stock-progress-fill {% if pct <= 25 %}danger{% elif pct <= 50 %}warning{% else %}ok{% endif %}" style="width:{% widthratio alerte.stock_actuel alerte.seuil_alerte 100 %}%"></div>
+                                        </div>
+                                        <span style="font-size:11px;font-weight:700;min-width:32px;">{% widthratio alerte.stock_actuel alerte.seuil_alerte 100 %}%</span>
+                                    </div>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>
+                                    {% if alerte.demande_achat_generee %}
+                                    <span class="badge bg-success bg-opacity-10" style="color:var(--clr-success)"><i class="fas fa-check"></i> Oui</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10" style="color:var(--clr-text-muted)"><i class="fas fa-times"></i> Non</span>
+                                    {% endif %}
+                                </td>
+                                <td style="white-space:nowrap;font-size:12px;color:var(--clr-text-muted);">
+                                    {% if alerte.date_alerte %}
+                                    <i class="far fa-clock"></i> {{ alerte.date_alerte|date:"d/m/Y" }}
+                                    <div style="font-size:10px;">{{ alerte.date_alerte|date:"H:i" }}</div>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        {% if alerte.statut == 'ACTIVE' and not alerte.demande_achat_generee %}
+                                        <form method="post" action="{% url 'alerte_generer_da' alerte.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-primary" title="Générer une DA" style="font-size:11px;">
+                                                <i class="fas fa-clipboard-list"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% if alerte.statut == 'ACTIVE' %}
+                                        <form method="post" action="{% url 'alerte_traiter' alerte.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success" title="Marquer traitée" style="font-size:11px;">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-panel">
+                                        <i class="fas fa-bell-slash" style="color:var(--clr-success)"></i>
+                                        <p class="mb-1 fw-semibold">Aucune alerte de stock</p>
+                                        <p style="font-size:12px;">Tous les niveaux de stock sont conformes aux seuils définis.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ═══════ RIGHT COLUMN — Panels ═══════ -->
+        <div class="col-lg-4">
+
+            <!-- Taux de résolution Gauge -->
+            <div class="section-card" style="text-align:center; padding:20px;">
+                <div class="section-header" style="border-bottom:none; justify-content:center;">
+                    <i class="fas fa-bullseye" style="color:var(--clr-accent)"></i> Taux de Résolution
+                </div>
+                <div class="gauge-container" style="margin:10px auto 16px;">
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                        <circle class="gauge-bg" cx="40" cy="40" r="34"/>
+                        <circle class="gauge-circle gauge-fill" cx="40" cy="40" r="34"
+                            stroke="{% if taux_resolution >= 70 %}var(--clr-success){% elif taux_resolution >= 40 %}var(--clr-warning){% else %}var(--clr-danger){% endif %}"
+                            stroke-dasharray="213.6"
+                            stroke-dashoffset="{{ taux_resolution|floatformat:0 }}"
+                            style="stroke-dashoffset: calc(213.6 - (213.6 * {{ taux_resolution }} / 100));"
+                        />
+                    </svg>
+                    <div class="gauge-text" style="color:{% if taux_resolution >= 70 %}var(--clr-success){% elif taux_resolution >= 40 %}var(--clr-warning){% else %}var(--clr-danger){% endif %}">
+                        {{ taux_resolution }}%
+                    </div>
+                </div>
+                <div style="font-size:12px;color:var(--clr-text-muted);">
+                    <strong>{{ alertes_traitees }}</strong> traitées sur <strong>{{ total_alertes }}</strong> total
+                </div>
+            </div>
+
+            <!-- Produits Critiques -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-fire" style="color:var(--clr-danger)"></i>
+                    Produits Critiques
+                    <span class="badge bg-danger ms-auto">{{ nb_produits_critiques }}</span>
+                </div>
+                {% if produits_critiques %}
+                {% for pc in produits_critiques %}
+                <div class="critic-item">
+                    <div class="critic-icon {% if pc.severity == 'CRITIQUE' %}critique{% elif pc.severity == 'URGENT' %}urgent{% else %}attention{% endif %}">
+                        {% if pc.severity == 'CRITIQUE' %}
+                        <i class="fas fa-skull-crossbones"></i>
+                        {% elif pc.severity == 'URGENT' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <a href="{% url 'produits_detail' pc.produit.pk %}" class="fw-semibold text-decoration-none" style="color:var(--clr-text);font-size:13px;">
+                                {{ pc.produit.nom }}
+                            </a>
+                            <span class="badge badge-severity-{{ pc.severity|lower }}" style="font-size:10px;">
+                                {{ pc.severity }}
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="stock-progress">
+                                <div class="stock-progress-fill {% if pc.ratio <= 25 %}danger{% elif pc.ratio <= 50 %}warning{% else %}ok{% endif %}" style="width:{{ pc.ratio }}%"></div>
+                            </div>
+                            <span style="font-size:11px;font-weight:700;color:var(--clr-text-muted);">{{ pc.ratio }}%</span>
+                        </div>
+                        <div style="font-size:11px;color:var(--clr-text-muted);margin-top:4px;">
+                            Stock : <strong style="color:var(--clr-danger)">{{ pc.stock_dispo }}</strong> / Seuil : <strong>{{ pc.seuil }}</strong>
+                            · Déficit : <strong style="color:var(--clr-danger)">{{ pc.deficit }} {{ pc.produit.unite|default:"unités" }}</strong>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-panel">
+                    <i class="fas fa-shield-alt" style="color:var(--clr-success)"></i>
+                    <p class="fw-semibold mb-0">Aucun produit critique</p>
+                    <p style="font-size:12px;">Tous les stocks sont au-dessus des seuils.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Lots proches de l'expiration -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-calendar-exclamation fa-calendar-times" style="color:var(--clr-warning)"></i>
+                    Lots en Expiration
+                    {% if lots_expires > 0 %}
+                    <span class="badge bg-danger ms-auto" title="Lots déjà expirés">{{ lots_expires }} expiré{{ lots_expires|pluralize:"s" }}</span>
+                    {% endif %}
+                </div>
+                {% if lots_expirant %}
+                {% for lot in lots_expirant %}
+                <div class="expiry-item">
+                    <div>
+                        <a href="{% url 'lots_detail' lot.pk %}" class="fw-semibold text-decoration-none" style="color:var(--clr-text);font-size:13px;">
+                            {{ lot.code_lot }}
+                        </a>
+                        <div style="font-size:11px;color:var(--clr-text-muted);">
+                            {{ lot.produit.nom }} · {{ lot.quantite_restante }} {{ lot.produit.unite|default:"u" }}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        {% with days_left=lot.date_expiration|timeuntil %}
+                        <span class="days-badge {% if '0' in days_left or '1 jour' in days_left or '2 jour' in days_left or '3 jour' in days_left %}critical{% else %}soon{% endif %}">
+                            <i class="fas fa-hourglass-half"></i> {{ days_left }}
+                        </span>
+                        {% endwith %}
+                        <div style="font-size:10px;color:var(--clr-text-muted);margin-top:2px;">
+                            {{ lot.date_expiration|date:"d/m/Y" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-panel">
+                    <i class="fas fa-calendar-check" style="color:var(--clr-success)"></i>
+                    <p class="fw-semibold mb-0">Aucun lot proche de l'expiration</p>
+                    <p style="font-size:12px;">Pas de lots expirant dans les 30 prochains jours.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Entrepôts en alerte -->
+            {% if entrepots_alerte %}
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-warehouse" style="color:var(--clr-warning)"></i>
+                    Entrepôts en Alerte
+                </div>
+                {% for e in entrepots_alerte %}
+                <div class="expiry-item">
+                    <div>
+                        <span class="fw-semibold" style="font-size:13px;">{{ e.nom }}</span>
+                        <div style="font-size:11px;color:var(--clr-text-muted);">
+                            Stock : {{ e.quantite_disponible }} / Seuil critique : {{ e.seuil_critique }}
+                        </div>
+                    </div>
+                    <span class="badge bg-warning text-dark"><i class="fas fa-exclamation"></i></span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Derniers traitements -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-history" style="color:var(--clr-success)"></i>
+                    Derniers Traitements
+                </div>
+                {% if derniers_traitements %}
+                {% for dt in derniers_traitements %}
+                <div class="treatment-item">
+                    <div class="treatment-dot"></div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-semibold" style="font-size:13px;">{{ dt.produit.nom }}</span>
+                            <span style="font-size:11px;color:var(--clr-text-muted);">{{ dt.date_traitement|timesince }} ago</span>
+                        </div>
+                        <div style="font-size:11px;color:var(--clr-text-muted);">
+                            Traité par <strong>{{ dt.user_traitement|default:"—" }}</strong> le {{ dt.date_traitement|date:"d/m/Y à H:i" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-panel" style="padding:20px;">
+                    <i class="fas fa-clipboard-check" style="font-size:24px; color:var(--clr-text-muted)"></i>
+                    <p style="font-size:12px; margin-top:8px;">Aucun traitement récent</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

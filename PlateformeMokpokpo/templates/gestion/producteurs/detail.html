@@ -13,18 +13,20 @@
                     <i class="fas fa-info-circle"></i> Informations
                 </div>
                 <div class="card-body">
-                    <p><strong>Nom:</strong> {{ producteur.nom }}</p>
-                    <p><strong>Prénom:</strong> {{ producteur.prenom }}</p>
-                    <p><strong>Type:</strong> {{ producteur.type_producteur }}</p>
-                    <p><strong>Téléphone:</strong> {{ producteur.telephone }}</p>
-                    <p><strong>Localisation:</strong> {{ producteur.localisation }}</p>
-                    <p><strong>Numéro ID:</strong> {{ producteur.numero_identification }}</p>
-                    <p><strong>Statut:</strong> 
-                        <span class="badge {% if producteur.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">
-                            {{ producteur.statut }}
-                        </span>
-                    </p>
-                    <p><strong>Date Inscription:</strong> {{ producteur.date_inscription|date:"d/m/Y" }}</p>
+                    <div class="d-flex flex-column gap-3">
+                        <div><small class="text-muted d-block" style="font-size:11px;">Nom complet</small><strong>{{ producteur.nom }} {{ producteur.prenom }}</strong></div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Type</small>{{ producteur.type_producteur }}</div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Téléphone</small>{{ producteur.telephone }}</div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Localisation</small>{{ producteur.localisation }}</div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">N° Identification</small>{{ producteur.numero_identification }}</div>
+                        <div>
+                            <small class="text-muted d-block" style="font-size:11px;">Statut</small>
+                            <span class="badge {% if producteur.statut == 'ACTIF' %}bg-success{% elif producteur.statut == 'SUSPENDU' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                {{ producteur.get_statut_display }}
+                            </span>
+                        </div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Date Inscription</small>{{ producteur.date_inscription|date:"d/m/Y" }}</div>
+                    </div>
                     <div class="d-flex gap-2 mt-3">
                         <a href="{% url 'producteurs_update' producteur.pk %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit"></i> Modifier
@@ -72,8 +74,11 @@
                                 {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    Aucun lot trouvé
+                                <td colspan="6">
+                                    <div class="empty-state" style="padding:24px;">
+                                        <i class="fas fa-cubes d-block"></i>
+                                        <p>Aucun lot trouvé</p>
+                                    </div>
                                 </td>
                             </tr>
                             {% endif %}

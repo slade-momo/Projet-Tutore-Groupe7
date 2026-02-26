@@ -13,16 +13,24 @@
                     <i class="fas fa-info-circle"></i> Informations Lot
                 </div>
                 <div class="card-body">
-                    <p><strong>Code Lot:</strong> {{ lot.code_lot }}</p>
-                    <p><strong>Produit:</strong> {{ lot.produit.nom }}</p>
-                    <p><strong>Producteur:</strong> {{ lot.producteur.nom }}</p>
-                    <p><strong>Zone:</strong> {{ lot.zone.nom }}</p>
-                    <p><strong>Quantité Initiale:</strong> {{ lot.quantite_initiale }}</p>
-                    <p><strong>Quantité Restante:</strong> {{ lot.quantite_restante }}</p>
-                    <p><strong>Qualité:</strong> {{ lot.qualite }}</p>
-                    <p><strong>État:</strong> <span class="badge bg-warning">{{ lot.etat }}</span></p>
-                    <p><strong>Réception:</strong> {{ lot.date_reception|date:"d/m/Y" }}</p>
-                    <p><strong>Expiration:</strong> {{ lot.date_expiration|date:"d/m/Y" }}</p>
+                    <div class="d-flex flex-column gap-3">
+                        <div><small class="text-muted d-block" style="font-size:11px;">Code Lot</small><strong>{{ lot.code_lot }}</strong></div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Produit</small>{{ lot.produit.nom }}</div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Producteur</small>{{ lot.producteur.nom }}</div>
+                        <div><small class="text-muted d-block" style="font-size:11px;">Zone</small>{{ lot.zone.nom }}</div>
+                        <div class="row g-2">
+                            <div class="col-6"><small class="text-muted d-block" style="font-size:11px;">Qté Initiale</small><strong>{{ lot.quantite_initiale }}</strong></div>
+                            <div class="col-6"><small class="text-muted d-block" style="font-size:11px;">Qté Restante</small><strong class="text-success">{{ lot.quantite_restante }}</strong></div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6"><small class="text-muted d-block" style="font-size:11px;">Qualité</small><span class="badge bg-secondary">{{ lot.qualite }}</span></div>
+                            <div class="col-6"><small class="text-muted d-block" style="font-size:11px;">État</small><span class="badge bg-warning">{{ lot.etat }}</span></div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6"><small class="text-muted d-block" style="font-size:11px;">Réception</small>{{ lot.date_reception|date:"d/m/Y" }}</div>
+                            <div class="col-6"><small class="text-muted d-block" style="font-size:11px;">Expiration</small>{{ lot.date_expiration|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
                     <div class="d-flex gap-2 mt-3">
                         <a href="{% url 'lots_update' lot.pk %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit"></i>
@@ -62,7 +70,12 @@
                                 {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-3">Aucun mouvement</td>
+                                <td colspan="4">
+                                    <div class="empty-state" style="padding:24px;">
+                                        <i class="fas fa-arrows-rotate d-block"></i>
+                                        <p>Aucun mouvement</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -91,12 +104,17 @@
                                     <td>{{ vente.numero_vente }}</td>
                                     <td>{{ vente.client.nom }}</td>
                                     <td>{{ vente.quantite_vendue }}</td>
-                                    <td class="text-success fw-bold">{{ vente.montant_total }} DZD</td>
+                                    <td class="text-success fw-bold">{{ vente.montant_total }} XOF</td>
                                 </tr>
                                 {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-3">Aucune vente</td>
+                                <td colspan="4">
+                                    <div class="empty-state" style="padding:24px;">
+                                        <i class="fas fa-shopping-cart d-block"></i>
+                                        <p>Aucune vente</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endif %}
                         </tbody>

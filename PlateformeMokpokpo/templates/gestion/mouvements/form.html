@@ -5,74 +5,134 @@
 {% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'mouvements_list' %}">Mouvements</a> / {{ title }}{% endblock %}
 
 {% block content %}
+<style>
+    .section-card { border: 1px solid var(--clr-border); border-radius: var(--radius-lg); background: var(--clr-surface); box-shadow: var(--shadow-sm); transition: box-shadow var(--transition); }
+    .section-card:hover { box-shadow: var(--shadow-md); }
+    .section-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--clr-border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; align-items: center; gap: .6rem; }
+    .section-header .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; color: #fff; flex-shrink: 0; }
+    .section-header h6 { margin: 0; font-weight: 600; font-size: .95rem; color: var(--clr-text); }
+    .section-header small { color: var(--clr-text-muted); font-size: .8rem; }
+    .section-body { padding: 1.25rem; }
+    .form-label { font-weight: 500; font-size: .85rem; color: var(--clr-text); margin-bottom: .35rem; }
+    .form-hint { font-size: .75rem; color: var(--clr-text-muted); margin-top: .25rem; display: block; }
+    .btn-actions { display: flex; gap: .75rem; padding-top: 1rem; }
+    .btn-actions .btn { padding: .6rem 1.5rem; font-weight: 500; border-radius: var(--radius); }
+</style>
+
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-arrows-alt"></i> {{ title }}
-                </div>
-                <div class="card-body">
-                    <form method="POST" novalidate>
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.type_mouvement.label }}</label>
+    <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4">
+            {% for error in form.non_field_errors %}<p class="mb-0">{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Colonne gauche -->
+            <div class="col-lg-7">
+                <!-- Détails du mouvement -->
+                <div class="section-card mb-4">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-accent);"><i class="fas fa-exchange-alt"></i></span>
+                        <div>
+                            <h6>Détails du mouvement</h6>
+                            <small>Type, lot et quantité concernés</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.type_mouvement.id_for_label }}" class="form-label">{{ form.type_mouvement.label }} <span class="text-danger">*</span></label>
                                 {{ form.type_mouvement }}
                                 {% if form.type_mouvement.errors %}<small class="text-danger">{{ form.type_mouvement.errors.0 }}</small>{% endif %}
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.lot.label }}</label>
+                            <div class="col-md-6">
+                                <label for="{{ form.lot.id_for_label }}" class="form-label">{{ form.lot.label }} <span class="text-danger">*</span></label>
                                 {{ form.lot }}
                                 {% if form.lot.errors %}<small class="text-danger">{{ form.lot.errors.0 }}</small>{% endif %}
                             </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.quantite.label }}</label>
+                            <div class="col-md-6">
+                                <label for="{{ form.quantite.id_for_label }}" class="form-label">{{ form.quantite.label }} <span class="text-danger">*</span></label>
                                 {{ form.quantite }}
                                 {% if form.quantite.errors %}<small class="text-danger">{{ form.quantite.errors.0 }}</small>{% endif %}
+                                <span class="form-hint">Quantité en kg ou tonnes</span>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.zone_origine.label }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zones -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-info);"><i class="fas fa-map-signs"></i></span>
+                        <div>
+                            <h6>Zones de transfert</h6>
+                            <small>Origine et destination du mouvement</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.zone_origine.id_for_label }}" class="form-label">
+                                    <i class="fas fa-sign-out-alt text-danger me-1"></i> {{ form.zone_origine.label }}
+                                </label>
                                 {{ form.zone_origine }}
                                 {% if form.zone_origine.errors %}<small class="text-danger">{{ form.zone_origine.errors.0 }}</small>{% endif %}
                             </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ form.zone_destination.label }}</label>
+                            <div class="col-md-6">
+                                <label for="{{ form.zone_destination.id_for_label }}" class="form-label">
+                                    <i class="fas fa-sign-in-alt text-success me-1"></i> {{ form.zone_destination.label }}
+                                </label>
                                 {{ form.zone_destination }}
                                 {% if form.zone_destination.errors %}<small class="text-danger">{{ form.zone_destination.errors.0 }}</small>{% endif %}
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="form-check mt-4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne droite -->
+            <div class="col-lg-5">
+                <div class="section-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-success);"><i class="fas fa-clipboard-check"></i></span>
+                        <div>
+                            <h6>Validation & Motif</h6>
+                            <small>Statut et justification</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check" style="padding-top: .25rem;">
                                     {{ form.valide }}
-                                    <label class="form-check-label">{{ form.valide.label }}</label>
+                                    <label class="form-check-label" for="{{ form.valide.id_for_label }}">{{ form.valide.label }}</label>
                                 </div>
+                                <span class="form-hint">Cochez si le mouvement est validé</span>
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.motif.id_for_label }}" class="form-label">{{ form.motif.label }}</label>
+                                {{ form.motif }}
+                                {% if form.motif.errors %}<small class="text-danger">{{ form.motif.errors.0 }}</small>{% endif %}
+                                <span class="form-hint">Raison du mouvement de stock</span>
                             </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">{{ form.motif.label }}</label>
-                            {{ form.motif }}
-                            {% if form.motif.errors %}<small class="text-danger">{{ form.motif.errors.0 }}</small>{% endif %}
-                        </div>
-                        
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Enregistrer
-                            </button>
-                            <a href="{% url 'mouvements_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Annuler
-                            </a>
-                        </div>
-                    </form>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="btn-actions mt-4">
+                    <button type="submit" class="btn btn-success flex-grow-1">
+                        <i class="fas fa-save me-1"></i> Enregistrer
+                    </button>
+                    <a href="{% url 'mouvements_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}

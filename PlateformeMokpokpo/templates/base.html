@@ -3,279 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Plateforme de Gestion{% endblock %}</title>
+    <title>{% block title %}Mokpokpo - Gestion de Stocks{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --danger-color: #e74c3c;
-            --warning-color: #f39c12;
-            --light-color: #ecf0f1;
+            --sidebar-width: 260px;
+            --topbar-height: 64px;
+            --clr-primary: #0f172a;
+            --clr-primary-light: #1e293b;
+            --clr-accent: #3b82f6;
+            --clr-accent-hover: #2563eb;
+            --clr-success: #10b981;
+            --clr-danger: #ef4444;
+            --clr-warning: #f59e0b;
+            --clr-info: #06b6d4;
+            --clr-bg: #f1f5f9;
+            --clr-surface: #ffffff;
+            --clr-text: #334155;
+            --clr-text-muted: #94a3b8;
+            --clr-border: #e2e8f0;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.06);
+            --transition: .2s cubic-bezier(.4,0,.2,1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
 
         body {
-            background-color: #f5f7fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .sidebar {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%);
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 250px;
-            height: 100vh;           /* hauteur fixe = toute la fenêtre */
-            padding: 20px;
-            color: white;
-            overflow-y: auto;        /* permet le scroll vertical */
-        }
-
-        .sidebar .brand {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar .nav {
-            list-style: none;
-        }
-
-        .sidebar .nav-item {
-            margin-bottom: 10px;
-        }
-
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .sidebar .nav-link.active {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .top-navbar {
-            background: white;
-            padding: 15px 30px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .page-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .breadcrumbs {
+            background: var(--clr-bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--clr-text);
             font-size: 14px;
-            color: #7f8c8d;
+            overflow-x: hidden;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--clr-text-muted); border-radius: 3px; }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            position: fixed; left: 0; top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--clr-primary);
+            color: #fff;
+            display: flex; flex-direction: column;
+            z-index: 1040;
+            transition: transform var(--transition);
+            overflow-y: auto; overflow-x: hidden;
         }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--secondary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+            flex-shrink: 0;
+        }
+        .sidebar-brand .brand-icon {
+            width: 38px; height: 38px;
+            background: var(--clr-accent);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .sidebar-brand .brand-text {
+            font-size: 17px; font-weight: 700; letter-spacing: -.3px;
+            line-height: 1.2;
+        }
+        .sidebar-brand .brand-text small {
+            font-size: 11px; font-weight: 400;
+            color: rgba(255,255,255,.5); display: block;
         }
 
+        .sidebar-section {
+            padding: 16px 16px 6px;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.2px;
+            color: rgba(255,255,255,.35);
+        }
+
+        .sidebar-nav { list-style: none; padding: 4px 10px; flex: 1; }
+        .sidebar-nav .nav-item { margin-bottom: 2px; }
+
+        .sidebar-nav .nav-link {
+            display: flex; align-items: center; gap: 12px;
+            padding: 9px 14px;
+            border-radius: 8px;
+            color: rgba(255,255,255,.65);
+            text-decoration: none;
+            font-size: 13px; font-weight: 500;
+            transition: all var(--transition);
+        }
+        .sidebar-nav .nav-link i {
+            width: 20px; text-align: center;
+            font-size: 15px; flex-shrink: 0;
+            opacity: .7; transition: opacity var(--transition);
+        }
+        .sidebar-nav .nav-link:hover {
+            background: rgba(255,255,255,.08);
+            color: #fff;
+        }
+        .sidebar-nav .nav-link:hover i { opacity: 1; }
+
+        .sidebar-nav .nav-link.active {
+            background: var(--clr-accent);
+            color: #fff; font-weight: 600;
+            box-shadow: 0 2px 8px rgba(59,130,246,.35);
+        }
+        .sidebar-nav .nav-link.active i { opacity: 1; }
+
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255,255,255,.08);
+            flex-shrink: 0;
+        }
+        .sidebar-footer .nav-link {
+            display: flex; align-items: center; gap: 12px;
+            padding: 8px 14px; border-radius: 8px;
+            color: rgba(255,255,255,.5);
+            font-size: 13px; text-decoration: none;
+        }
+        .sidebar-footer .nav-link:hover {
+            background: rgba(239,68,68,.15);
+            color: #ef4444;
+        }
+
+        /* ─── MAIN ─── */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            transition: margin var(--transition);
+        }
+
+        /* ─── TOPBAR ─── */
+        .topbar {
+            position: sticky; top: 0; z-index: 1030;
+            height: var(--topbar-height);
+            background: rgba(255,255,255,.85);
+            border-bottom: 1px solid var(--clr-border);
+            display: flex; align-items: center;
+            padding: 0 24px; gap: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .topbar-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 20px; color: var(--clr-text);
+            cursor: pointer; padding: 4px 8px; border-radius: 6px;
+        }
+        .topbar-toggle:hover { background: var(--clr-bg); }
+
+        .topbar-title { flex: 1; }
+        .topbar-title h1 {
+            font-size: 18px; font-weight: 700;
+            color: var(--clr-primary); margin: 0; line-height: 1.3;
+        }
+        .topbar-title .breadcrumbs {
+            font-size: 12px; color: var(--clr-text-muted);
+        }
+        .topbar-title .breadcrumbs a {
+            color: var(--clr-accent); text-decoration: none;
+        }
+        .topbar-title .breadcrumbs a:hover { text-decoration: underline; }
+
+        .topbar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 14px 6px 6px;
+            border-radius: 50px;
+            background: var(--clr-bg);
+        }
+        .topbar-user .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--clr-accent), #8b5cf6);
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+        }
+        .topbar-user .user-name {
+            font-size: 13px; font-weight: 600; color: var(--clr-text);
+        }
+
+        /* ─── PAGE CONTENT ─── */
+        .page-content { flex: 1; padding: 24px; }
+
+        /* ─── CARDS ─── */
         .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--clr-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            background: var(--clr-surface);
             margin-bottom: 20px;
-            transition: transform 0.2s ease;
+            transition: box-shadow var(--transition);
         }
-
-        .card:hover {
-            transform: translateY(-2px);
-        }
+        .card:hover { box-shadow: var(--shadow-md); }
 
         .card-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%);
-            color: white;
-            border-radius: 12px 12px 0 0 !important;
-            padding: 20px;
-            font-weight: bold;
+            background: var(--clr-surface) !important;
+            border-bottom: 1px solid var(--clr-border);
+            padding: 16px 20px;
+            font-weight: 600; font-size: 14px;
+            color: var(--clr-primary);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+            display: flex; align-items: center; gap: 10px;
         }
+        .card-header i:first-child { color: var(--clr-accent); font-size: 16px; }
 
-        .btn-primary {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
+        .card-body { padding: 20px; }
 
-        .btn-primary:hover {
-            background-color: #2980b9;
-            border-color: #2980b9;
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-            border-color: var(--success-color);
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-            border-color: var(--danger-color);
-        }
-
-        .table {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .table thead {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
+        /* ─── TABLES ─── */
+        .table { margin: 0; font-size: 13px; }
+        .table thead { background: var(--clr-bg); }
         .table thead th {
-            border: none;
-            padding: 15px;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
+            border: none; padding: 10px 16px;
+            font-weight: 600; font-size: 11px;
+            text-transform: uppercase; letter-spacing: .5px;
+            color: var(--clr-text-muted); white-space: nowrap;
         }
-
         .table tbody td {
-            padding: 15px;
-            border: none;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--clr-border);
+            vertical-align: middle;
         }
+        .table tbody tr:last-child td { border-bottom: none; }
+        .table-hover tbody tr:hover { background: rgba(59,130,246,.03); }
 
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-
+        /* ─── BADGES ─── */
         .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            padding: 4px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 600;
+            letter-spacing: .2px;
         }
 
-        .form-control, .form-select {
+        /* ─── BUTTONS ─── */
+        .btn {
+            font-size: 13px; font-weight: 600;
+            border-radius: 8px; padding: 8px 16px;
+            transition: all var(--transition);
+        }
+        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+        .btn-primary { background: var(--clr-accent); border-color: var(--clr-accent); }
+        .btn-primary:hover { background: var(--clr-accent-hover); border-color: var(--clr-accent-hover); }
+        .btn-success { background: var(--clr-success); border-color: var(--clr-success); }
+        .btn-danger { background: var(--clr-danger); border-color: var(--clr-danger); }
+        .btn-warning { background: var(--clr-warning); border-color: var(--clr-warning); color: #fff; }
+        .btn-warning:hover { color: #fff; }
+        .btn-info { background: var(--clr-info); border-color: var(--clr-info); color: #fff; }
+        .btn-info:hover { color: #fff; }
+
+        .btn-icon {
+            width: 32px; height: 32px; padding: 0;
+            display: inline-flex; align-items: center; justify-content: center;
             border-radius: 8px;
-            border: 1px solid #ddd;
-            padding: 10px 15px;
-            font-size: 14px;
         }
 
+        /* ─── FORMS ─── */
+        .form-control, .form-select {
+            border-radius: 8px; border: 1px solid var(--clr-border);
+            padding: 9px 14px; font-size: 13px;
+            transition: all var(--transition);
+        }
         .form-control:focus, .form-select:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: var(--clr-accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+        }
+        .form-label {
+            font-size: 13px; font-weight: 600;
+            color: var(--clr-text); margin-bottom: 6px;
         }
 
+        /* ─── STAT CARDS ─── */
         .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            background: var(--clr-surface);
+            border: 1px solid var(--clr-border);
+            border-radius: var(--radius-lg);
+            padding: 20px; text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition);
         }
-
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-bottom: 12px;
+        }
         .stat-card .number {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--secondary-color);
+            font-size: 28px; font-weight: 800;
+            color: var(--clr-primary); line-height: 1.2;
         }
-
         .stat-card .label {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-top: 10px;
+            color: var(--clr-text-muted);
+            font-size: 12px; font-weight: 500; margin-top: 4px;
         }
 
-        @media (max-width: 768px) {
-            /* Option 1 : garder une sidebar scrollable aussi sur mobile */
-            .sidebar {
-                width: 220px;
-            }
-            .main-content {
-                margin-left: 220px;
-            }
+        /* ─── ALERTS ─── */
+        .alert {
+            border-radius: var(--radius); border: none;
+            font-size: 13px; padding: 12px 16px;
         }
+
+        /* ─── PROGRESS ─── */
+        .progress { height: 6px; border-radius: 3px; background: var(--clr-border); }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state {
+            padding: 48px 20px; text-align: center;
+        }
+        .empty-state i {
+            font-size: 40px; color: var(--clr-border); margin-bottom: 12px;
+        }
+        .empty-state p { color: var(--clr-text-muted); font-size: 14px; margin: 0; }
+
+        /* ─── FOOTER ─── */
+        .main-footer {
+            padding: 16px 24px; text-align: center;
+            font-size: 12px; color: var(--clr-text-muted);
+            border-top: 1px solid var(--clr-border);
+            background: var(--clr-surface);
+        }
+
+        /* ─── MOBILE ─── */
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,.2); }
+            .main-wrapper { margin-left: 0; }
+            .topbar-toggle { display: block; }
+            .sidebar-overlay {
+                display: none; position: fixed; inset: 0;
+                background: rgba(0,0,0,.4); z-index: 1035;
+            }
+            .sidebar-overlay.show { display: block; }
+        }
+
+        /* ─── ANIMATION ─── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page-content { animation: fadeInUp .3s ease-out; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="sidebar">
-        <div class="brand">
-            <i class="fas fa-warehouse"></i>
-            Gestion Stocks
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-leaf"></i></div>
+            <div class="brand-text">
+                Mokpokpo
+                <small>Gestion de Stocks</small>
+            </div>
         </div>
-        <ul class="nav">
+
+        <div class="sidebar-section">Principal</div>
+        <ul class="sidebar-nav">
             <li class="nav-item">
                 <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <i class="fas fa-home"></i> Tableau de bord
+                    <i class="fas fa-chart-pie"></i> Tableau de Bord
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="{% url 'clients_list' %}" class="nav-link {% if 'clients' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-users"></i> Clients
-                </a>
-            </li>
+
+            <li><div class="sidebar-section">Catalogue</div></li>
             <li class="nav-item">
                 <a href="{% url 'produits_list' %}" class="nav-link {% if 'produits' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-box"></i> Produits
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'producteurs_list' %}" class="nav-link {% if 'producteurs' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-seedling"></i> Producteurs
                 </a>
             </li>
             <li class="nav-item">
@@ -284,89 +389,140 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'entrepots_list' %}" class="nav-link {% if 'entrepots' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-store"></i> Entrepôts
+                <a href="{% url 'producteurs_list' %}" class="nav-link {% if 'producteurs' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-seedling"></i> Producteurs
+                </a>
+            </li>
+
+            <li><div class="sidebar-section">Commerce</div></li>
+            <li class="nav-item">
+                <a href="{% url 'clients_list' %}" class="nav-link {% if 'clients' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-users"></i> Clients
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'zones_list' %}" class="nav-link {% if 'zones' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-th"></i> Zones
+                <a href="{% url 'commandes_list' %}" class="nav-link {% if 'commandes' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-file-invoice"></i> Commandes
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'ventes_list' %}" class="nav-link {% if 'ventes' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'ventes_list' %}" class="nav-link {% if 'ventes' in request.resolver_match.url_name and 'immediates' not in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-shopping-cart"></i> Ventes
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{% url 'ventes_immediates_list' %}" class="nav-link {% if 'ventes_immediates' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-bolt"></i> Ventes Immédiates
+                </a>
+            </li>
+
+            <li><div class="sidebar-section">Logistique</div></li>
+            <li class="nav-item">
+                <a href="{% url 'entrepots_list' %}" class="nav-link {% if 'entrepots' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-warehouse"></i> Entrepôts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'zones_list' %}" class="nav-link {% if 'zones' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-th-large"></i> Zones
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{% url 'mouvements_list' %}" class="nav-link {% if 'mouvements' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-arrows-alt"></i> Mouvements
+                    <i class="fas fa-arrows-rotate"></i> Mouvements
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{% url 'historique_list' %}" class="nav-link {% if 'historique' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-history"></i> Historique
+                    <i class="fas fa-clock-rotate-left"></i> Historique
                 </a>
             </li>
-            {% if user.is_superuser or request.session.user_role == "admin" %}
-            <!-- NOUVEAU : Remplacez par -->
+
+            <li><div class="sidebar-section">Approvisionnement</div></li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'stock_forecast' %}active{% endif %}" 
-                href="{% url 'stock_prediction' %}">
-                    <i class="fas fa-brain me-1"></i> 
-                    <span>Prévisions IA</span>
+                <a href="{% url 'alertes_list' %}" class="nav-link {% if 'alertes' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-bell"></i> Alertes Stock
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'demandes_list' %}" class="nav-link {% if 'demandes' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i> Demandes d'Achat
+                </a>
+            </li>
+
+            {% if user.is_superuser or request.session.user_role == "admin" %}
+            <li><div class="sidebar-section">Intelligence</div></li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'stock_forecast' %}active{% endif %}"
+                   href="{% url 'stock_prediction' %}">
+                    <i class="fas fa-brain"></i> Prévisions IA
                 </a>
             </li>
             {% endif %}
-            <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 20px 0;">
-            <li class="nav-item">
-                {% if user.is_superuser %}
-                    <a href="/admin/" class="nav-link">
-                        <i class="fas fa-cog"></i> Admin Django
-                    </a>
-                {% endif %}
-            </li>
-            <li class="nav-item" style="margin-left: 15px;">
-                <form method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="nav-link btn btn-link p-0">
-                        <i class="fas fa-sign-out-alt"></i> Déconnexion
-                    </button>
-                </form>
-
-            </li>
         </ul>
-    </div>
 
-    <div class="main-content">
-        <div class="top-navbar">
-            <div>
-                <h1 class="page-title">{% block page_title %}Plateforme de Gestion{% endblock %}</h1>
+        <div class="sidebar-footer">
+            {% if user.is_superuser %}
+            <a href="/admin/" class="nav-link" style="color:rgba(255,255,255,.5); font-size:12px; padding:6px 14px;">
+                <i class="fas fa-cog" style="width:20px; text-align:center;"></i> Administration
+            </a>
+            {% endif %}
+            <form method="post" action="{% url 'logout' %}" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent" style="cursor:pointer;">
+                    <i class="fas fa-right-from-bracket" style="width:20px; text-align:center;"></i> Déconnexion
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main-wrapper">
+        <header class="topbar">
+            <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="topbar-title">
+                <h1>{% block page_title %}Gestion de Stocks{% endblock %}</h1>
                 <div class="breadcrumbs">{% block breadcrumbs %}{% endblock %}</div>
             </div>
-            <div class="user-info">
-                <span>{{ request.user.username }}</span>
-                <div class="user-avatar">
-                    {{ request.user.first_name|default:request.user.username|first|upper }}
-                </div>
+            <div class="topbar-user">
+                <div class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</div>
+                <span class="user-name d-none d-sm-inline">{{ request.user.username }}</span>
             </div>
-        </div>
+        </header>
 
         {% if messages %}
-        <div class="container-fluid">
+        <div class="px-4 pt-3">
             {% for message in messages %}
-            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle"></i> {{ message }}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                {% if 'success' in message.tags %}<i class="fas fa-circle-check"></i>
+                {% elif 'error' in message.tags or 'danger' in message.tags %}<i class="fas fa-circle-xmark"></i>
+                {% elif 'warning' in message.tags %}<i class="fas fa-triangle-exclamation"></i>
+                {% else %}<i class="fas fa-circle-info"></i>{% endif %}
+                <span>{{ message }}</span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        {% block content %}{% endblock %}
+        <main class="page-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="main-footer">
+            &copy; 2026 Ferme Mokpokpo &mdash; Plateforme de Gestion de Stocks
+        </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

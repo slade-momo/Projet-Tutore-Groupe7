@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Plateforme de Gestion{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'commandes_list' %}">Commandes</a> / {{ title }}{% endblock %}
+
+{% block content %}
+<style>
+    .section-card { border: 1px solid var(--clr-border); border-radius: var(--radius-lg); background: var(--clr-surface); box-shadow: var(--shadow-sm); transition: box-shadow var(--transition); }
+    .section-card:hover { box-shadow: var(--shadow-md); }
+    .section-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--clr-border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; align-items: center; gap: .6rem; }
+    .section-header .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; color: #fff; flex-shrink: 0; }
+    .section-header h6 { margin: 0; font-weight: 600; font-size: .95rem; color: var(--clr-text); }
+    .section-header small { color: var(--clr-text-muted); font-size: .8rem; }
+    .section-body { padding: 1.25rem; }
+    .form-label { font-weight: 500; font-size: .85rem; color: var(--clr-text); margin-bottom: .35rem; }
+    .form-hint { font-size: .75rem; color: var(--clr-text-muted); margin-top: .25rem; display: block; }
+    .btn-actions { display: flex; gap: .75rem; padding-top: 1rem; }
+    .btn-actions .btn { padding: .6rem 1.5rem; font-weight: 500; border-radius: var(--radius); }
+</style>
+
+<div class="container-fluid">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4">
+            {% for error in form.non_field_errors %}<p class="mb-0">{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Colonne gauche -->
+            <div class="col-lg-7">
+                <!-- Détails de la commande -->
+                <div class="section-card mb-4">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-accent);"><i class="fas fa-file-invoice"></i></span>
+                        <div>
+                            <h6>Détails de la commande</h6>
+                            <small>Client, produit et quantités</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            {% for field in form %}
+                            {% if field.name == 'observations' or field.name == 'date_livraison_souhaitee' or field.name == 'priorite' %}
+                            {% else %}
+                            <div class="{% if field.name == 'quantite_demandee' or field.name == 'quantite_reservee' or field.name == 'quantite_servie' %}col-md-4{% else %}col-md-6{% endif %}">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.name == 'client' or field.name == 'produit' or field.name == 'quantite_demandee' %} <span class="text-danger">*</span>{% endif %}</label>
+                                {% if field.field.disabled %}
+                                    {{ field }}
+                                {% elif field.field.widget.input_type == 'select' or field.field.widget.attrs.class == 'form-select' %}
+                                    {{ field }}
+                                {% else %}
+                                    <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}" value="{{ field.value|default:"" }}" step="0.01">
+                                {% endif %}
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                {% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                                {% if field.name == 'numero_commande' %}<span class="form-hint">Généré automatiquement</span>{% endif %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Planification -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-warning);"><i class="fas fa-calendar-check"></i></span>
+                        <div>
+                            <h6>Planification</h6>
+                            <small>Livraison, priorité et remarques</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            {% for field in form %}
+                            {% if field.name == 'date_livraison_souhaitee' %}
+                            <div class="col-md-6">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                <input type="date" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}" value="{{ field.value|default:"" }}">
+                                {% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                            {% elif field.name == 'priorite' %}
+                            <div class="col-md-6">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                            {% elif field.name == 'observations' %}
+                            <div class="col-12">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}" rows="3">{{ field.value|default:"" }}</textarea>
+                                {% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne droite -->
+            <div class="col-lg-5">
+                <!-- Information Stock -->
+                <div class="section-card mb-4" id="stock-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-success);"><i class="fas fa-boxes"></i></span>
+                        <div>
+                            <h6>Information Stock</h6>
+                            <small>Disponibilité du produit sélectionné</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div id="stock-info-panel" class="d-none">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="text-center p-2 rounded" style="background: #f0f9ff;">
+                                        <small class="text-muted d-block">Physique</small>
+                                        <span class="fw-bold text-primary" id="stock-physique">—</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 rounded" style="background: #fffbeb;">
+                                        <small class="text-muted d-block">Réservé</small>
+                                        <span class="fw-bold text-warning" id="stock-reserve">—</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 rounded" style="background: #f0fdfa;">
+                                        <small class="text-muted d-block">Tampon</small>
+                                        <span class="fw-bold text-info" id="stock-tampon">—</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 rounded" style="background: #f0fdf4;">
+                                        <small class="text-muted d-block">Disponible</small>
+                                        <span class="fw-bold fs-5" id="stock-dispo">—</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="stock-alerte-msg" class="mt-2 d-none">
+                                <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Stock en dessous du seuil d'alerte !</span>
+                            </div>
+                        </div>
+                        <div id="stock-placeholder">
+                            <p class="text-muted text-center mb-0"><i class="fas fa-hand-pointer me-1"></i> Sélectionnez un produit</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Réservation prévisionnelle -->
+                <div id="reservation-preview" class="alert alert-secondary d-none mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="reservation-msg"></span>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="btn-actions">
+                    <button type="submit" class="btn btn-success flex-grow-1">
+                        <i class="fas fa-save me-1"></i>
+                        {% if is_edit %}Enregistrer les modifications{% else %}Créer la commande{% endif %}
+                    </button>
+                    <a href="{% url 'commandes_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const PRODUITS_STOCK = {{ produits_stock_json|safe }};
+
+    function updateStockInfo() {
+        const produitSelect = document.getElementById('id_produit_commande') ||
+                              document.querySelector('[name="produit"]');
+        const qteInput = document.getElementById('id_quantite_commande') ||
+                         document.querySelector('[name="quantite_demandee"]');
+        const panel = document.getElementById('stock-info-panel');
+        const placeholder = document.getElementById('stock-placeholder');
+
+        if (!produitSelect || !panel) return;
+
+        const produitId = produitSelect.value;
+        if (!produitId || !PRODUITS_STOCK[produitId]) {
+            panel.classList.add('d-none');
+            if (placeholder) placeholder.classList.remove('d-none');
+            return;
+        }
+
+        const info = PRODUITS_STOCK[produitId];
+        panel.classList.remove('d-none');
+        if (placeholder) placeholder.classList.add('d-none');
+
+        document.getElementById('stock-physique').textContent = parseFloat(info.stock_physique).toFixed(2);
+        document.getElementById('stock-reserve').textContent = parseFloat(info.stock_reserve).toFixed(2);
+        document.getElementById('stock-tampon').textContent = parseFloat(info.stock_tampon_comptoir).toFixed(2);
+
+        const dispo = parseFloat(info.stock_disponible);
+        const dispoEl = document.getElementById('stock-dispo');
+        dispoEl.textContent = dispo.toFixed(2);
+        dispoEl.className = dispo > 0 ? 'fw-bold fs-5 text-success' : 'fw-bold fs-5 text-danger';
+
+        const alerteMsg = document.getElementById('stock-alerte-msg');
+        if (info.en_alerte === 'True' || info.en_alerte === true) {
+            alerteMsg.classList.remove('d-none');
+        } else {
+            alerteMsg.classList.add('d-none');
+        }
+
+        // Preview réservation
+        const qte = parseFloat(qteInput?.value || 0);
+        const preview = document.getElementById('reservation-preview');
+        const msg = document.getElementById('reservation-msg');
+        if (qte > 0) {
+            preview.classList.remove('d-none');
+            if (dispo >= qte) {
+                preview.className = 'alert alert-success mb-4';
+                msg.textContent = `Stock suffisant (${dispo.toFixed(2)} disponible). ` +
+                    `La réservation de ${qte.toFixed(2)} unités sera effectuée automatiquement.`;
+            } else if (dispo > 0) {
+                preview.className = 'alert alert-warning mb-4';
+                msg.textContent = `Stock partiellement suffisant. ${dispo.toFixed(2)} seront réservées, ` +
+                    `le reste (${(qte - dispo).toFixed(2)}) sera en attente de réapprovisionnement.`;
+            } else {
+                preview.className = 'alert alert-danger mb-4';
+                msg.textContent = `Stock insuffisant (0 disponible). La commande sera en attente de réapprovisionnement.`;
+            }
+        } else {
+            preview.classList.add('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const produitSelect = document.getElementById('id_produit_commande') ||
+                              document.querySelector('[name="produit"]');
+        const qteInput = document.getElementById('id_quantite_commande') ||
+                         document.querySelector('[name="quantite_demandee"]');
+
+        if (produitSelect) produitSelect.addEventListener('change', updateStockInfo);
+        if (qteInput) qteInput.addEventListener('input', updateStockInfo);
+        updateStockInfo();
+    });
+</script>
+{% endblock %}

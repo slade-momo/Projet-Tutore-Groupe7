@@ -54,7 +54,7 @@
                             <td>{{ zone.capacite }}</td>
                             <td>{{ zone.quantite }}</td>
                             <td>{{ zone.responsable }}</td>
-                            <td><span class="badge bg-info">{{ zone.statut }}</span></td>
+                            <td><span class="badge {% if zone.statut == 'DISPONIBLE' %}bg-success{% elif zone.statut == 'PLEINE' %}bg-info{% elif zone.statut == 'EN_MAINTENANCE' %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ zone.get_statut_display }}</span></td>
                             <td>
                                 <a href="{% url 'zones_update' zone.pk %}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i>
@@ -67,8 +67,11 @@
                         {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox"></i> Aucune zone trouvée
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-th-large d-block"></i>
+                                <p>Aucune zone trouvée</p>
+                            </div>
                         </td>
                     </tr>
                     {% endif %}

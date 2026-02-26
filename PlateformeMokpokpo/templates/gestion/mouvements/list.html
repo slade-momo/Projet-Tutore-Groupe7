@@ -56,8 +56,11 @@
                         {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox"></i> Aucun mouvement trouvé
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-arrows-rotate d-block"></i>
+                                <p>Aucun mouvement trouvé</p>
+                            </div>
                         </td>
                     </tr>
                     {% endif %}

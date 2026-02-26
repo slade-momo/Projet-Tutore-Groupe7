@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Plateforme de Gestion{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'demandes_list' %}">Demandes d'Achat</a> / {{ title }}{% endblock %}
+
+{% block content %}
+<style>
+    .section-card { border: 1px solid var(--clr-border); border-radius: var(--radius-lg); background: var(--clr-surface); box-shadow: var(--shadow-sm); transition: box-shadow var(--transition); }
+    .section-card:hover { box-shadow: var(--shadow-md); }
+    .section-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--clr-border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; align-items: center; gap: .6rem; }
+    .section-header .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; color: #fff; flex-shrink: 0; }
+    .section-header h6 { margin: 0; font-weight: 600; font-size: .95rem; color: var(--clr-text); }
+    .section-header small { color: var(--clr-text-muted); font-size: .8rem; }
+    .section-body { padding: 1.25rem; }
+    .form-label { font-weight: 500; font-size: .85rem; color: var(--clr-text); margin-bottom: .35rem; }
+    .form-hint { font-size: .75rem; color: var(--clr-text-muted); margin-top: .25rem; display: block; }
+    .btn-actions { display: flex; gap: .75rem; padding-top: 1rem; }
+    .btn-actions .btn { padding: .6rem 1.5rem; font-weight: 500; border-radius: var(--radius); }
+</style>
+
+<div class="container-fluid">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4">
+            {% for error in form.non_field_errors %}<p class="mb-0">{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Colonne gauche -->
+            <div class="col-lg-7">
+                <div class="section-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-accent);"><i class="fas fa-clipboard-list"></i></span>
+                        <div>
+                            <h6>Informations de la demande</h6>
+                            <small>Produit, quantité et priorité</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            {% for field in form %}
+                            {% if field.name != 'observations' %}
+                            <div class="{% if field.name == 'numero_da' or field.name == 'produit' %}col-md-6{% elif field.name == 'quantite_a_commander' or field.name == 'priorite' %}col-md-6{% else %}col-md-6{% endif %}">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.name == 'produit' or field.name == 'quantite_a_commander' %} <span class="text-danger">*</span>{% endif %}</label>
+                                {% if field.field.disabled %}
+                                    {{ field }}
+                                {% elif field.field.widget.input_type == 'select' or field.field.widget.attrs.class == 'form-select' %}
+                                    {{ field }}
+                                {% else %}
+                                    <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}" value="{{ field.value|default:"" }}">
+                                {% endif %}
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                {% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                                {% if field.name == 'numero_da' %}<span class="form-hint">Généré automatiquement</span>{% endif %}
+                                {% if field.name == 'quantite_a_commander' %}<span class="form-hint">Quantité souhaitée pour l'achat</span>{% endif %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne droite -->
+            <div class="col-lg-5">
+                <div class="section-card">
+                    <div class="section-header">
+                        <span class="icon-circle" style="background: var(--clr-warning);"><i class="fas fa-sticky-note"></i></span>
+                        <div>
+                            <h6>Notes</h6>
+                            <small>Observations et remarques</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                {% for field in form %}
+                                {% if field.name == 'observations' %}
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}" rows="5">{{ field.value|default:"" }}</textarea>
+                                {% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                                <span class="form-hint">Précisez le contexte de cette demande d'achat</span>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="btn-actions mt-4">
+                    <button type="submit" class="btn btn-success flex-grow-1">
+                        <i class="fas fa-save me-1"></i> Enregistrer
+                    </button>
+                    <a href="{% url 'demandes_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

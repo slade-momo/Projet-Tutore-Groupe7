@@ -1,0 +1,313 @@
+{% extends 'internaute/base.html' %}
+{% load static %}
+
+{% block title %}Ferme Mokpokpo — Noix de Cajou Premium du Togo{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ─── HERO ─── */
+    .hero {
+        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 40%, #388e3c 100%);
+        padding: 100px 0 80px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(249,168,37,.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255,255,255,.05) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero-content { position: relative; z-index: 2; }
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,.12);
+        color: #fdd835;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: .8rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        backdrop-filter: blur(4px);
+    }
+    .hero h1 {
+        font-family: var(--font-heading);
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.15;
+        margin-bottom: 1rem;
+    }
+    .hero h1 span { color: #fdd835; }
+    .hero p.lead {
+        color: rgba(255,255,255,.85);
+        font-size: 1.15rem;
+        max-width: 520px;
+        margin-bottom: 2rem;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-stats {
+        display: flex;
+        gap: 48px;
+        margin-top: 3.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,.15);
+    }
+    .hero-stat h3 {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        color: #fdd835;
+        font-weight: 800;
+        margin-bottom: 2px;
+    }
+    .hero-stat p { color: rgba(255,255,255,.7); font-size: .85rem; margin: 0; }
+    @media (max-width: 768px) {
+        .hero { padding: 60px 0 50px; }
+        .hero h1 { font-size: 2.2rem; }
+        .hero-stats { gap: 24px; flex-wrap: wrap; }
+    }
+
+    /* ─── FEATURES ─── */
+    .features-section { padding: 80px 0; background: var(--clr-gray-50); }
+    .feature-card {
+        background: #fff;
+        border-radius: var(--radius);
+        padding: 32px 28px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--clr-gray-200);
+        transition: all .3s;
+        height: 100%;
+    }
+    .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: rgba(46,125,50,.2);
+    }
+    .feature-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1.2rem;
+    }
+    .feature-icon.green { background: rgba(76,175,80,.12); color: #2e7d32; }
+    .feature-icon.gold { background: rgba(249,168,37,.12); color: #f57f17; }
+    .feature-icon.blue { background: rgba(33,150,243,.12); color: #1565c0; }
+    .feature-icon.brown { background: rgba(121,85,72,.12); color: #4e342e; }
+    .feature-card h4 { font-weight: 700; font-size: 1.1rem; margin-bottom: .5rem; }
+    .feature-card p { color: var(--clr-gray-600); font-size: .9rem; margin: 0; }
+
+    /* ─── VEDETTES ─── */
+    .vedettes-section { padding: 80px 0; }
+    .product-card-home {
+        background: #fff;
+        border-radius: var(--radius);
+        border: 1px solid var(--clr-gray-200);
+        overflow: hidden;
+        transition: all .3s;
+        height: 100%;
+    }
+    .product-card-home:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+    .product-card-thumb {
+        height: 200px;
+        overflow: hidden;
+    }
+    .product-card-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .4s;
+    }
+    .product-card-home:hover .product-card-thumb img {
+        transform: scale(1.08);
+    }
+    .product-card-body { padding: 24px; }
+    .product-card-body h5 { font-weight: 700; margin-bottom: 6px; }
+    .product-card-body .cat { color: var(--clr-gray-600); font-size: .82rem; margin-bottom: .8rem; }
+    .product-card-body .price { font-weight: 700; color: var(--clr-green-dark); font-size: 1.15rem; }
+    .product-card-body .price small { font-weight: 400; color: var(--clr-gray-600); font-size: .8rem; }
+    .product-card-body .stock-info { margin-top: .6rem; }
+
+    /* ─── CTA ─── */
+    .cta-section {
+        background: linear-gradient(135deg, #f9a825, #fdd835);
+        padding: 60px 0;
+    }
+    .cta-section h2 { font-family: var(--font-heading); color: var(--clr-brown); }
+    .cta-section p { color: var(--clr-brown-light); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-award"></i> Qualité Premium certifiée
+            </div>
+            <h1>La noix de cajou<br><span>d'exception</span> du Togo</h1>
+            <p class="lead">
+                De nos plantations togolaises à votre table : découvrez une gamme complète de produits
+                à base de cajou, cultivés avec soin et traçabilité garantie.
+            </p>
+            <div class="hero-actions">
+                <a href="{% url 'catalogue' %}" class="btn-primary-custom">
+                    <i class="fas fa-th-large"></i> Voir le catalogue
+                </a>
+                <a href="{% url 'apropos' %}" class="btn-outline-custom" style="border-color:rgba(255,255,255,.4); color:#fff;">
+                    <i class="fas fa-info-circle"></i> En savoir plus
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <h3>{{ produits_count }}</h3>
+                    <p>Produits disponibles</p>
+                </div>
+                <div class="hero-stat">
+                    <h3>{{ producteurs_count }}</h3>
+                    <p>Producteurs actifs</p>
+                </div>
+                <div class="hero-stat">
+                    <h3>{{ entrepots_count }}</h3>
+                    <p>Entrepôts au Togo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features-section">
+    <div class="container text-center">
+        <h2 class="section-title">Pourquoi choisir Ferme Mokpokpo ?</h2>
+        <p class="section-subtitle">Notre engagement se traduit en chaque graine</p>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon green"><i class="fas fa-leaf"></i></div>
+                    <h4>Qualité Premium</h4>
+                    <p>Nos amandes W320 et W240 sont triées, calibrées et contrôlées selon les normes internationales d'export.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon gold"><i class="fas fa-handshake"></i></div>
+                    <h4>Commerce Équitable</h4>
+                    <p>Nous travaillons directement avec {{ producteurs_count }} producteurs et coopératives locales du Togo.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon blue"><i class="fas fa-shield-halved"></i></div>
+                    <h4>Traçabilité Totale</h4>
+                    <p>Chaque lot est tracé de la plantation à l'expédition grâce à notre système de gestion intégré.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon brown"><i class="fas fa-earth-africa"></i></div>
+                    <h4>100% Togo</h4>
+                    <p>Cultivé, transformé et conditionné au Togo — {{ entrepots_count }} sites de stockage sur le territoire.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ PRODUITS VEDETTES ═══ -->
+{% if produits_vedettes %}
+<section class="vedettes-section">
+    <div class="container text-center">
+        <h2 class="section-title">Nos produits phares</h2>
+        <p class="section-subtitle">Disponibles maintenant dans nos entrepôts</p>
+        <div class="row g-4 justify-content-center">
+            {% for p in produits_vedettes %}
+            <div class="col-md-6 col-lg-4">
+                <div class="product-card-home">
+                    <div class="product-card-thumb">
+                        {% if 'brut' in p.nom|lower %}
+                            <img src="{% static 'images/produits/noix-de-cajou.jpg' %}" alt="{{ p.nom }}" loading="lazy">
+                        {% elif 'W320' in p.nom or 'W240' in p.nom or 'amande' in p.nom|lower %}
+                            <img src="{% static 'images/produits/amande_cajou.webp' %}" alt="{{ p.nom }}" loading="lazy">
+                        {% elif 'brisure' in p.nom|lower %}
+                            <img src="{% static 'images/produits/brisures.jpg' %}" alt="{{ p.nom }}" loading="lazy">
+                        {% elif 'huile' in p.nom|lower or 'CNSL' in p.nom %}
+                            <img src="{% static 'images/produits/cnsl-huile.jpg' %}" alt="{{ p.nom }}" loading="lazy">
+                        {% elif 'pomme' in p.nom|lower %}
+                            <img src="{% static 'images/produits/pomme_cajou.webp' %}" alt="{{ p.nom }}" loading="lazy">
+                        {% else %}
+                            <img src="{% static 'images/produits/noix-de-cajou.jpg' %}" alt="{{ p.nom }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="product-card-body">
+                        <h5>{{ p.nom }}</h5>
+                        <div class="cat"><i class="fas fa-tag fa-xs"></i> {{ p.categorie }}</div>
+                        {% if p.prix_unitaire %}
+                        <div class="price">
+                            {{ p.prix_unitaire|floatformat:0 }} <small>XOF / {{ p.unite|default:"kg" }}</small>
+                        </div>
+                        {% endif %}
+                        <div class="stock-info">
+                            {% if p.stock_disponible > p.seuil_alerte %}
+                                <span class="badge-stock badge-en-stock"><i class="fas fa-check-circle"></i> En stock</span>
+                            {% elif p.stock_disponible > 0 %}
+                                <span class="badge-stock badge-stock-faible"><i class="fas fa-exclamation-triangle"></i> Stock limité</span>
+                            {% else %}
+                                <span class="badge-stock badge-rupture"><i class="fas fa-times-circle"></i> Rupture</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-4">
+            <a href="{% url 'catalogue' %}" class="btn-primary-custom">
+                <i class="fas fa-th-large"></i> Voir tout le catalogue
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ═══ CTA ═══ -->
+<section class="cta-section">
+    <div class="container text-center">
+        <h2>Intéressé par nos produits ?</h2>
+        <p class="mb-4">Contactez-nous pour les commandes en gros, l'export ou un partenariat.</p>
+        <a href="mailto:info@fermemokpokpo.tg" class="btn-primary-custom" style="background:var(--clr-brown); box-shadow:0 4px 14px rgba(78,52,46,.3);">
+            <i class="fas fa-envelope"></i> Nous contacter
+        </a>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('nav-accueil').classList.add('active');
+</script>
+{% endblock %}
