@@ -45,14 +45,15 @@ class ProduitForm(forms.ModelForm):
             }),
             'stock_physique': forms.NumberInput(attrs={
                 'class': 'form-control', 'step': '0.01',
-                'placeholder': '0.00',
+                'placeholder': '0.00', 'min': '0',
             }),
             'stock_reserve': forms.NumberInput(attrs={
                 'class': 'form-control', 'step': '0.01',
-                'placeholder': '0.00',
+                'placeholder': '0.00', 'min': '0',
             }),
             'stock_tampon_comptoir': forms.NumberInput(attrs={
                 'class': 'form-control', 'step': '0.01',
+                'min': '0',
             }),
             'seuil_alerte': forms.NumberInput(attrs={
                 'class': 'form-control', 'step': '0.01',
@@ -65,10 +66,44 @@ class ProduitForm(forms.ModelForm):
             }),
         }
         labels = {
-            'stock_physique': 'Stock Physique',
+            'stock_physique': 'Stock Physique (= Disponible)',
             'stock_reserve': 'Stock Réservé',
             'stock_tampon_comptoir': 'Stock Tampon',
         }
+
+    def clean_stock_physique(self):
+        from decimal import Decimal
+        val = self.cleaned_data.get('stock_physique')
+        if val is not None and val < Decimal('0.00'):
+            raise forms.ValidationError('Le stock physique ne peut pas être négatif.')
+        return val
+
+    def clean_stock_reserve(self):
+        from decimal import Decimal
+        val = self.cleaned_data.get('stock_reserve')
+        if val is not None and val < Decimal('0.00'):
+            raise forms.ValidationError('Le stock réservé ne peut pas être négatif.')
+        return val
+
+    def clean_stock_tampon_comptoir(self):
+        from decimal import Decimal
+        val = self.cleaned_data.get('stock_tampon_comptoir')
+        if val is not None and val < Decimal('0.00'):
+            raise forms.ValidationError('Le stock tampon ne peut pas être négatif.')
+        return val
+
+    def clean(self):
+        cleaned = super().clean()
+        from decimal import Decimal
+        sp = cleaned.get('stock_physique') or Decimal('0.00')
+        sr = cleaned.get('stock_reserve') or Decimal('0.00')
+        st = cleaned.get('stock_tampon_comptoir') or Decimal('0.00')
+        if sr + st > sp:
+            raise forms.ValidationError(
+                f'Stock réservé ({sr}) + tampon ({st}) = {sr + st} '
+                f'ne peut pas dépasser le stock physique ({sp}).'
+            )
+        return cleaned
 
 
 class ProducteurForm(forms.ModelForm):
@@ -148,7 +183,7 @@ class LotForm(forms.ModelForm):
 
     field_order = [
         'code_lot', 'produit', 'producteur', 'zone',
-        'quantite_initiale', 'qualite', 'etat',
+        'quantite_initiale', 'quantite_restante', 'qualite', 'etat',
         'date_reception', 'date_expiration', 'observations',
     ]
 
@@ -156,17 +191,24 @@ class LotForm(forms.ModelForm):
         model = Lot
         fields = [
             'produit', 'producteur', 'zone',
-            'quantite_initiale',
+            'quantite_initiale', 'quantite_restante',
             'qualite', 'etat', 'date_reception', 'date_expiration',
             'observations',
         ]
-        labels = {'quantite_initiale': 'Quantité'}
+        labels = {
+            'quantite_initiale': 'Quantité initiale',
+            'quantite_restante': 'Quantité disponible',
+        }
         widgets = {
             'produit': forms.Select(attrs={'class': 'form-select'}),
             'producteur': forms.Select(attrs={'class': 'form-select'}),
             'zone': forms.Select(attrs={'class': 'form-select'}),
             'quantite_initiale': forms.NumberInput(attrs={
                 'class': 'form-control', 'step': '0.01',
+            }),
+            'quantite_restante': forms.NumberInput(attrs={
+                'class': 'form-control', 'step': '0.01',
+                'placeholder': 'Rempli auto si vide',
             }),
             'qualite': forms.Select(attrs={'class': 'form-select'}),
             'etat': forms.Select(attrs={'class': 'form-select'}),
@@ -183,6 +225,7 @@ class LotForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['quantite_restante'].required = False
         if self.instance and self.instance.pk:
             self.fields['code_lot'].initial = self.instance.code_lot
         else:

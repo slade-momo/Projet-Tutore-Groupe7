@@ -267,16 +267,36 @@ def traiter_vente_immediate_service(produit, quantite_demandee, type_vente,
 
 
 def verifier_et_creer_alertes(produit, user=None):
-    """Vérifie si stock ≤ seuil et crée alerte + DA automatiquement."""
+    """Vérifie si stock ≤ seuil et crée alerte + DA automatiquement.
+    Si le stock est repassé au-dessus du seuil, résout les alertes actives."""
     from .models import AlerteStock
     from django.utils import timezone
 
+    # Rafraîchir le produit depuis la BD (les triggers DB ont pu modifier le stock)
+    produit.refresh_from_db()
     info = get_stock_info(produit)
+
     if not info['en_alerte']:
+        # Stock OK → résoudre les alertes actives existantes
+        alertes_actives = AlerteStock.objects.filter(produit=produit, statut='ACTIVE')
+        for alerte in alertes_actives:
+            alerte.statut = 'TRAITEE'
+            alerte.date_traitement = timezone.now()
+            alerte.user_traitement = user
+            alerte.observations = (
+                (alerte.observations or '') +
+                f'\nRésolue auto : stock remonté à {info["stock_disponible"]}'
+            )
+            alerte.save(update_fields=['statut', 'date_traitement',
+                                       'user_traitement', 'observations'])
         return None
 
     existe = AlerteStock.objects.filter(produit=produit, statut='ACTIVE').exists()
     if existe:
+        # Mettre à jour le stock_actuel de l'alerte existante
+        AlerteStock.objects.filter(produit=produit, statut='ACTIVE').update(
+            stock_actuel=info['stock_disponible']
+        )
         return None
 
     alerte = AlerteStock.objects.create(

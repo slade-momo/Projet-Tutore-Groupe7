@@ -249,7 +249,7 @@
                 <div class="product-card-home">
                     <div class="product-card-thumb">
                         {% if 'brut' in p.nom|lower %}
-                            <img src="{% static 'images/produits/noix-de-cajou.jpg' %}" alt="{{ p.nom }}" loading="lazy">
+                            <img src="{% static 'images/produits/noix de cajou brutes.jpg' %}" alt="{{ p.nom }}" loading="lazy">
                         {% elif 'W320' in p.nom or 'W240' in p.nom or 'amande' in p.nom|lower %}
                             <img src="{% static 'images/produits/amande_cajou.webp' %}" alt="{{ p.nom }}" loading="lazy">
                         {% elif 'brisure' in p.nom|lower %}

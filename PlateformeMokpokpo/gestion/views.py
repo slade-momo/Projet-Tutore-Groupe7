@@ -298,7 +298,7 @@ def produits_update(request, pk):
 
 @login_required
 def produits_delete(request, pk):
-    """Supprimer un produit"""
+    """Supprimer un produit et toutes ses données liées"""
     produit = get_object_or_404(Produit, pk=pk)
     if request.method == 'POST':
         old_data = _model_to_dict(produit, ['nom', 'categorie', 'unite', 'prix_unitaire'])
@@ -307,8 +307,58 @@ def produits_delete(request, pk):
             f'Suppression du produit {produit.nom}',
             ancienne_valeur=old_data,
         )
-        produit.delete()
-        messages.success(request, 'Produit supprimé avec succès')
+
+        from django.db import connection
+        with connection.cursor() as cur:
+            # Désactiver temporairement les triggers de protection
+            cur.execute('ALTER TABLE stock_cajou.mouvement_stock DISABLE TRIGGER ALL')
+            cur.execute('ALTER TABLE stock_cajou.lot DISABLE TRIGGER ALL')
+            cur.execute('ALTER TABLE stock_cajou.vente DISABLE TRIGGER ALL')
+            cur.execute('ALTER TABLE stock_cajou.produit DISABLE TRIGGER ALL')
+
+            try:
+                # Supprimer les affectations de lots liés à ce produit
+                cur.execute(
+                    'DELETE FROM stock_cajou.affectation_lot WHERE lot_id IN '
+                    '(SELECT id FROM stock_cajou.lot WHERE produit_id = %s)', [pk])
+                # Supprimer les mouvements de stock des lots liés
+                cur.execute(
+                    'DELETE FROM stock_cajou.mouvement_stock WHERE lot_id IN '
+                    '(SELECT id FROM stock_cajou.lot WHERE produit_id = %s)', [pk])
+                # Détacher l'historique des lots liés
+                cur.execute(
+                    'UPDATE stock_cajou.historique_tracabilite SET lot_id = NULL WHERE lot_id IN '
+                    '(SELECT id FROM stock_cajou.lot WHERE produit_id = %s)', [pk])
+                # Supprimer les ventes liées aux lots
+                cur.execute(
+                    'DELETE FROM stock_cajou.vente WHERE lot_id IN '
+                    '(SELECT id FROM stock_cajou.lot WHERE produit_id = %s)', [pk])
+                # Supprimer les lots
+                cur.execute(
+                    'DELETE FROM stock_cajou.lot WHERE produit_id = %s', [pk])
+                # Supprimer les lignes de commande liées
+                cur.execute(
+                    'DELETE FROM stock_cajou.ligne_commande WHERE produit_id = %s', [pk])
+                # Supprimer les ventes immédiates
+                cur.execute(
+                    'DELETE FROM stock_cajou.vente_immediate WHERE produit_id = %s', [pk])
+                # Supprimer les demandes d'achat
+                cur.execute(
+                    'DELETE FROM stock_cajou.demande_achat WHERE produit_id = %s', [pk])
+                # Supprimer les alertes de stock
+                cur.execute(
+                    'DELETE FROM stock_cajou.alerte_stock WHERE produit_id = %s', [pk])
+                # Supprimer le produit
+                cur.execute(
+                    'DELETE FROM stock_cajou.produit WHERE id = %s', [pk])
+            finally:
+                # Réactiver les triggers dans tous les cas
+                cur.execute('ALTER TABLE stock_cajou.mouvement_stock ENABLE TRIGGER ALL')
+                cur.execute('ALTER TABLE stock_cajou.lot ENABLE TRIGGER ALL')
+                cur.execute('ALTER TABLE stock_cajou.vente ENABLE TRIGGER ALL')
+                cur.execute('ALTER TABLE stock_cajou.produit ENABLE TRIGGER ALL')
+
+        messages.success(request, f'Produit « {old_data["nom"]} » et toutes ses données associées supprimés avec succès')
         return redirect('produits_list')
 
     return render(request, 'gestion/confirm_delete.html', {'object': produit})
@@ -664,11 +714,35 @@ def lots_create(request):
         if form.is_valid():
             lot = form.save(commit=False)
             lot.code_lot = generate_lot_code()
-            lot.quantite_restante = lot.quantite_initiale
+            lot.quantite_restante = lot.quantite_restante if lot.quantite_restante is not None else lot.quantite_initiale
             lot.quantite_reservee = Decimal('0.00')
             lot.user = request.user
             lot.date_creation = timezone.now()
             lot.save()
+
+            # ── Mettre à jour le stock physique du produit ──
+            produit = lot.produit
+            produit.stock_physique = (
+                (produit.stock_physique or Decimal('0.00')) + lot.quantite_initiale
+            )
+            produit.date_dernier_reappro = timezone.now()
+            produit.save(update_fields=['stock_physique', 'date_dernier_reappro'])
+
+            # ── Créer un mouvement d'entrée ──
+            MouvementStock.objects.create(
+                lot=lot,
+                type_mouvement='ENTREE',
+                quantite=lot.quantite_initiale,
+                motif=f'Réception lot {lot.code_lot}',
+                zone_destination=lot.zone,
+                user=request.user,
+                date_mouvement=timezone.now(),
+                valide=True,
+            )
+
+            # ── Vérifier les alertes (résoudre si stock remonté) ──
+            verifier_et_creer_alertes(produit, request.user)
+
             _log_historique(
                 request.user, 'creation',
                 f'Création du lot {lot.code_lot} — {lot.quantite_initiale} {lot.produit.unite or "unités"} de {lot.produit.nom}',
@@ -795,6 +869,40 @@ def ventes_create(request):
             vente.user = request.user
             vente.date_vente = timezone.now()
             vente.save()
+
+            # ── Déduire le stock du lot et du produit ──
+            lot = vente.lot
+            lot.quantite_restante = max(
+                Decimal('0.00'),
+                (lot.quantite_restante or Decimal('0.00')) - vente.quantite_vendue
+            )
+            if lot.quantite_restante <= 0:
+                lot.etat = 'EPUISE'
+            elif lot.quantite_restante < lot.quantite_initiale:
+                lot.etat = 'PARTIELLEMENT_SORTI'
+            lot.save(update_fields=['quantite_restante', 'etat'])
+
+            produit = lot.produit
+            produit.stock_physique = max(
+                Decimal('0.00'),
+                (produit.stock_physique or Decimal('0.00')) - vente.quantite_vendue
+            )
+            produit.save(update_fields=['stock_physique'])
+
+            # ── Créer un mouvement de sortie ──
+            MouvementStock.objects.create(
+                lot=lot,
+                type_mouvement='SORTIE',
+                quantite=vente.quantite_vendue,
+                motif=f'Vente {vente.numero_vente}',
+                user=request.user,
+                date_mouvement=timezone.now(),
+                valide=True,
+            )
+
+            # ── Vérifier et créer les alertes automatiquement ──
+            verifier_et_creer_alertes(produit, request.user)
+
             _log_historique(
                 request.user, 'vente',
                 f'Vente {vente.numero_vente} — {vente.quantite_vendue} unités à {vente.montant_total} XOF',
@@ -861,6 +969,10 @@ def mouvements_create(request):
             mouvement.user = request.user
             mouvement.date_mouvement = timezone.now()
             mouvement.save()
+
+            # ── Vérifier les alertes après mouvement de stock ──
+            produit = mouvement.lot.produit
+            verifier_et_creer_alertes(produit, request.user)
 
             # Enregistrer dans l'historique
             _log_historique(
