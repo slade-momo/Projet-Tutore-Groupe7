@@ -1,273 +1,361 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Prévisions IA - Ferme Mokpokpo{% endblock %}
-{% block page_title %}Prévisions IA{% endblock %}
-{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Prévisions IA{% endblock %}
+{% block title %}Previsions - Ferme Mokpokpo{% endblock %}
+{% block page_title %}Previsions de Stock{% endblock %}
+{% block breadcrumbs %}<i class="fas fa-home"></i> <a href="{% url 'dashboard' %}">Accueil</a> / Previsions{% endblock %}
 
 {% block extra_css %}
 <style>
-    .chart-container { max-height: 500px; overflow: hidden; }
-    .table-container { max-height: 400px; overflow-y: auto; }
-    .table-critique { background-color: rgba(239,68,68,.06) !important; }
-    .no-data-hero { padding: 80px 20px; text-align: center; }
-    .no-data-hero i { font-size: 4rem; color: var(--clr-accent); opacity: .5; margin-bottom: 16px; }
-    .data-badge { font-size: .75rem; padding: 2px 10px; border-radius: 20px;
-        background: rgba(16,185,129,.1); color: #10b981; font-weight: 600; }
+    .forecast-header {
+        background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-accent) 100%);
+        border-radius: var(--radius-lg); padding: 24px 28px; color: #fff;
+        margin-bottom: 20px;
+    }
+    .forecast-header h2 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+    .forecast-header p { opacity: .85; font-size: .85rem; margin: 6px 0 0; }
+
+    .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .kpi-box {
+        flex: 1; min-width: 150px;
+        background: var(--clr-surface); border-radius: var(--radius);
+        padding: 16px; box-shadow: var(--shadow-sm);
+        border: 1px solid var(--clr-border); text-align: center;
+    }
+    .kpi-box .kpi-val { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+    .kpi-box .kpi-lbl { font-size: .72rem; color: var(--clr-text-muted); font-weight: 500; margin-top: 4px; }
+    .kpi-box .kpi-hint { font-size: .68rem; color: var(--clr-text-muted); margin-top: 2px; }
+
+    .section-card {
+        background: var(--clr-surface); border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm); border: 1px solid var(--clr-border);
+        margin-bottom: 20px; overflow: hidden;
+    }
+    .section-card .sec-header {
+        padding: 14px 18px; border-bottom: 1px solid var(--clr-border);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-card .sec-header h6 {
+        font-weight: 700; font-size: .88rem; margin: 0;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .section-card .sec-body { padding: 16px 18px; }
+
+    .reco-item {
+        padding: 10px 14px; border-radius: 6px; margin-bottom: 8px;
+        display: flex; align-items: flex-start; gap: 10px; font-size: .84rem;
+        border-left: 4px solid;
+    }
+    .reco-item:last-child { margin-bottom: 0; }
+    .reco-item.reco-danger { background: rgba(239,68,68,.05); border-color: #ef4444; color: #991b1b; }
+    .reco-item.reco-warning { background: rgba(245,158,11,.05); border-color: #f59e0b; color: #92400e; }
+    .reco-item.reco-success { background: rgba(16,185,129,.05); border-color: #10b981; color: #065f46; }
+    .reco-item.reco-info { background: rgba(6,182,212,.05); border-color: #06b6d4; color: #155e75; }
+    .reco-item i { margin-top: 2px; }
+
+    .risk-badge {
+        padding: 2px 8px; border-radius: 4px; font-size: .7rem;
+        font-weight: 700; text-transform: uppercase;
+    }
+    .risk-CRITIQUE { background: rgba(239,68,68,.12); color: #dc2626; }
+    .risk-ALERTE { background: rgba(245,158,11,.12); color: #d97706; }
+    .risk-VIGILANCE { background: rgba(59,130,246,.12); color: #2563eb; }
+    .risk-OPTIMAL { background: rgba(16,185,129,.12); color: #059669; }
+
+    .saison-badge {
+        padding: 2px 7px; border-radius: 4px; font-size: .68rem;
+        font-weight: 600;
+    }
+    .saison-Recolte { background: rgba(16,185,129,.1); color: #059669; }
+    .saison-Pluies { background: rgba(59,130,246,.1); color: #2563eb; }
+    .saison-Seche { background: rgba(245,158,11,.1); color: #d97706; }
+    .confiance-bar {
+        height: 6px; border-radius: 3px; background: var(--clr-border);
+        overflow: hidden; width: 50px; display: inline-block; vertical-align: middle;
+    }
+    .confiance-bar .fill { height: 100%; border-radius: 3px; }
+    .fiabilite-badge {
+        display: inline-block; padding: 3px 10px; border-radius: 4px;
+        font-size: .72rem; font-weight: 700;
+    }
+
+    .data-table { font-size: .82rem; margin-bottom: 0; }
+    .data-table thead th {
+        background: var(--clr-bg); font-weight: 700; font-size: .72rem;
+        text-transform: uppercase; letter-spacing: .4px; color: var(--clr-text-muted);
+        border: none; padding: 10px 12px;
+    }
+    .data-table tbody td { padding: 9px 12px; vertical-align: middle; border-color: var(--clr-border); }
+    .data-table tbody tr:hover { background: rgba(59,130,246,.03); }
+    .row-critique { background: rgba(239,68,68,.04) !important; }
+
+    .seuil-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .seuil-item {
+        flex: 1; min-width: 120px; text-align: center;
+        padding: 10px; border-radius: 6px; background: var(--clr-bg);
+    }
+    .seuil-item .seuil-val { font-size: 1.1rem; font-weight: 800; }
+    .seuil-item .seuil-lbl { font-size: .68rem; color: var(--clr-text-muted); margin-top: 2px; }
+
+    .chart-wrapper { position: relative; }
+
+    .no-data-box { padding: 60px 20px; text-align: center; }
+    .no-data-box i { font-size: 3rem; color: var(--clr-accent); opacity: .4; }
+
+    .year-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--clr-border); }
+    .year-section h6 { font-size: .82rem; font-weight: 700; margin-bottom: 8px; color: var(--clr-text-muted); }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- HEADER -->
-    <div class="text-center mb-4">
-        <h2 class="fw-bold" style="color: var(--clr-primary);">
-            <i class="fas fa-brain" style="color: var(--clr-accent);"></i> Stock Analytics
-        </h2>
-        <p class="text-muted">
-            Prévisions IA Prophet &bull;
-            {% if date_range %}{{ date_range }}{% else %}Analyse en temps réel{% endif %}
-            {% if nb_mois_historique %}
-                <span class="data-badge ms-2">
-                    <i class="fas fa-database"></i> {{ nb_mois_historique }} mois de données
-                </span>
-            {% endif %}
+
+    <!-- EN-TETE -->
+    <div class="forecast-header">
+        <h2><i class="fas fa-chart-line me-2"></i>Previsions de Stock - Cajou Togo</h2>
+        <p>
+            Predictions basees sur les activites reelles du site et la saisonnalite cajou togolaise
+            {% if date_range %} &mdash; Periode : {{ date_range }}{% endif %}
+            {% if nb_mois_historique %} &mdash; {{ nb_mois_historique }} mois de donnees{% endif %}
         </p>
     </div>
 
     {% if no_data %}
-    <!-- PAS ASSEZ DE DONNÉES -->
-    <div class="card">
-        <div class="card-body no-data-hero">
-            <i class="fas fa-database d-block"></i>
-            <h4 class="fw-bold mb-3">Données insuffisantes pour la prévision</h4>
-            <p class="text-muted mb-4" style="max-width: 500px; margin: 0 auto;">
-                Le modèle Prophet nécessite au minimum 2 mois de données historiques
-                (mouvements de stock, lots, ventes) pour générer des prévisions fiables.
+    <div class="section-card">
+        <div class="sec-body no-data-box">
+            <i class="fas fa-database d-block mb-3"></i>
+            <h5 class="fw-bold mb-2">Donnees insuffisantes</h5>
+            <p class="text-muted" style="max-width: 450px; margin: 0 auto;">
+                Il faut au minimum 2 mois de donnees (mouvements de stock, lots, ventes)
+                pour generer des previsions.
             </p>
-            <div class="row g-3 justify-content-center">
-                <div class="col-auto">
-                    <div class="stat-card" style="min-width: 180px;">
-                        <div class="stat-icon" style="background: rgba(59,130,246,.1); color: #3b82f6;">
-                            <i class="fas fa-boxes"></i>
-                        </div>
-                        <div class="number">{{ current_stock|floatformat:0 }}</div>
-                        <div class="label">Stock Actuel (kg)</div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <div class="stat-card" style="min-width: 180px;">
-                        <div class="stat-icon" style="background: rgba(6,182,212,.1); color: #06b6d4;">
-                            <i class="fas fa-hard-hat"></i>
-                        </div>
-                        <div class="number">{{ capacite_max|floatformat:0 }}</div>
-                        <div class="label">Capacité Max</div>
-                    </div>
-                </div>
+            <div class="mt-3">
+                <span class="fw-bold" style="font-size: 1.3rem; color: var(--clr-accent);">{{ current_stock|floatformat:0 }} kg</span>
+                <br><small class="text-muted">Stock actuel</small>
             </div>
-            <p class="text-muted mt-4" style="font-size: .85rem;">
-                <i class="fas fa-info-circle"></i>
-                Ajoutez des mouvements de stock, des lots et des ventes pour activer les prévisions.
-            </p>
         </div>
     </div>
     {% else %}
 
-    <!-- KPIs -->
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(59,130,246,.1); color: #3b82f6;">
-                    <i class="fas fa-boxes"></i>
-                </div>
-                <div class="number">{{ current_stock|floatformat:0 }}</div>
-                <div class="label">Stock Actuel</div>
+    <!-- KPIs PRINCIPAUX -->
+    <div class="kpi-row">
+        <div class="kpi-box">
+            <div class="kpi-val" style="color: var(--clr-accent);">{{ current_stock|floatformat:0 }}</div>
+            <div class="kpi-lbl">Stock Actuel (kg)</div>
+        </div>
+        <div class="kpi-box">
+            <div class="kpi-val" style="color: {% if precision > 70 %}var(--clr-success){% elif precision > 40 %}var(--clr-warning){% else %}var(--clr-danger){% endif %};">{{ precision }}%</div>
+            <div class="kpi-lbl">Precision Estimee</div>
+            <div class="kpi-hint">
+                Fiabilite :
+                <span class="fiabilite-badge" style="background: {% if fiabilite == 'Elevee' %}rgba(16,185,129,.12); color: #059669{% elif fiabilite == 'Bonne' %}rgba(59,130,246,.12); color: #2563eb{% elif fiabilite == 'Moyenne' %}rgba(245,158,11,.12); color: #d97706{% else %}rgba(239,68,68,.12); color: #dc2626{% endif %};">{{ fiabilite }}</span>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(16,185,129,.1); color: #10b981;">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="number">{{ precision }}%</div>
-                <div class="label">Précision Modèle</div>
+        <div class="kpi-box">
+            <div class="kpi-val" style="color: {% if risk_analysis.tendance_dir == 'hausse' %}var(--clr-success){% elif risk_analysis.tendance_dir == 'baisse' %}var(--clr-danger){% else %}var(--clr-warning){% endif %};">
+                {% if risk_analysis.tendance_dir == 'hausse' %}<i class="fas fa-arrow-up"></i>{% elif risk_analysis.tendance_dir == 'baisse' %}<i class="fas fa-arrow-down"></i>{% else %}<i class="fas fa-minus"></i>{% endif %}
+                {{ risk_analysis.tendance_pct }}%
             </div>
+            <div class="kpi-lbl">Tendance</div>
+            <div class="kpi-hint">{{ risk_analysis.tendance_dir|title }}</div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(6,182,212,.1); color: #06b6d4;">
-                    <i class="fas fa-hard-hat"></i>
-                </div>
-                <div class="number">{{ capacite_max|floatformat:0 }}</div>
-                <div class="label">Capacité Maximum</div>
-            </div>
+        <div class="kpi-box">
+            <div class="kpi-val" style="color: var(--clr-danger);">{{ risk_analysis.mois_critique_count }}</div>
+            <div class="kpi-lbl">Mois Critiques</div>
+            {% if risk_analysis.rupture_estimee %}
+            <div class="kpi-hint" style="color: var(--clr-danger);"><i class="fas fa-warning"></i> Rupture: {{ risk_analysis.rupture_estimee }}</div>
+            {% endif %}
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card" style="border-color: var(--clr-danger);">
-                <div class="stat-icon" style="background: rgba(239,68,68,.1); color: #ef4444;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="number" style="color: var(--clr-danger);">{{ seuil_critique|floatformat:0 }}</div>
-                <div class="label">Seuil Critique</div>
-            </div>
+        <div class="kpi-box">
+            <div class="kpi-val" style="color: #8b5cf6;">{{ risk_analysis.stock_moyen_prevu|floatformat:0 }}</div>
+            <div class="kpi-lbl">Stock Moyen Prevu</div>
+            <div class="kpi-hint">Min: {{ risk_analysis.stock_min_prevu|floatformat:0 }} / Max: {{ risk_analysis.stock_max_prevu|floatformat:0 }}</div>
         </div>
     </div>
 
-    <!-- GRAPHIQUES PRINCIPAUX -->
-    <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-chart-area"></i>
-                    <span>Prévision Complète</span>
-                </div>
-                <div class="card-body p-2 chart-container">
-                    {% if img_forecast %}
-                        <img src="data:image/png;base64,{{ img_forecast }}" class="img-fluid rounded" alt="Prévision complète">
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-chart-line d-block"></i>
-                            <p>Graphique en cours de génération...</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- RECOMMANDATIONS -->
+    {% if recommandations %}
+    <div class="section-card">
+        <div class="sec-header">
+            <h6><i class="fas fa-lightbulb" style="color: #f59e0b;"></i> Recommandations</h6>
         </div>
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-cogs"></i>
-                    <span>Composants Prophet</span>
-                </div>
-                <div class="card-body p-2">
-                    {% if img_components %}
-                        <img src="data:image/png;base64,{{ img_components }}" class="img-fluid rounded" style="max-height: 400px;" alt="Composants">
-                    {% else %}
-                        <div class="empty-state" style="padding:24px;">
-                            <i class="fas fa-cogs d-block"></i>
-                            <p>Analyse saisonnalité</p>
-                        </div>
-                    {% endif %}
-                </div>
+        <div class="sec-body">
+            {% for reco in recommandations %}
+            <div class="reco-item reco-{{ reco.type }}">
+                <i class="{{ reco.icon }}"></i>
+                <span>{{ reco.text }}</span>
             </div>
+            {% endfor %}
         </div>
-    </div>
-
-    <!-- BARCHARTS PRÉVISIONS PAR ANNÉE (dynamique) -->
-    {% if year_forecasts %}
-    <div class="row g-4 mb-4">
-        {% for yf in year_forecasts %}
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-calendar-alt" style="color: {{ yf.color }} !important;"></i>
-                    <span>Prévisions {{ yf.year }}</span>
-                </div>
-                <div class="card-body p-3">
-                    {% if yf.img %}
-                        <img src="data:image/png;base64,{{ yf.img }}" class="img-fluid rounded" alt="{{ yf.year }}">
-                    {% else %}
-                        <div class="empty-state" style="padding:24px;">
-                            <i class="fas fa-chart-bar d-block"></i>
-                            <p>Données non disponibles</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endfor %}
     </div>
     {% endif %}
 
-    <!-- DONNÉES HISTORIQUES -->
-    <div class="row g-4">
+    <!-- GRAPHIQUE UNIQUE : Evolution du Stock -->
+    <div class="section-card">
+        <div class="sec-header">
+            <h6><i class="fas fa-chart-line" style="color: var(--clr-accent);"></i> Evolution du Stock & Previsions</h6>
+            <small class="text-muted">LinearRegression</small>
+        </div>
+        <div class="sec-body">
+            <div class="chart-wrapper">
+                <canvas id="chartStock" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLEAUX DE DONNEES -->
+    <div class="row g-3 mb-3">
+        <!-- Historique -->
         <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-history"></i>
-                    <span>Derniers 12 mois - Historique Stock</span>
+            <div class="section-card" style="margin-bottom: 0;">
+                <div class="sec-header">
+                    <h6><i class="fas fa-history" style="color: var(--clr-info);"></i> Historique (donnees reelles)</h6>
                 </div>
-                <div class="table-responsive table-container">
-                    <table class="table table-hover mb-0">
+                <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                    <table class="table data-table">
                         <thead>
                             <tr>
                                 <th>Mois</th>
-                                <th>Entrées</th>
-                                <th>Sorties</th>
-                                <th>Stock</th>
-                                <th>Alerte</th>
-                                <th>%Rempl.</th>
+                                <th class="text-end">Entrees (kg)</th>
+                                <th class="text-end">Sorties (kg)</th>
+                                <th class="text-end">Stock (kg)</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in historique_stock %}
-                            <tr class="{% if item.alerte == 'CRITIQUE' %}table-critique{% endif %}">
-                                <td class="fw-bold">{{ item.ds|date:"M Y" }}</td>
-                                <td>{{ item.entrees|floatformat:0 }}</td>
-                                <td>{{ item.sorties|floatformat:0 }}</td>
-                                <td class="fw-bold">{{ item.stock|floatformat:0 }}</td>
-                                <td>
-                                    <span class="badge {% if item.alerte == 'CRITIQUE' %}bg-danger{% else %}bg-success{% endif %}">
-                                        {{ item.alerte }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress flex-grow-1" style="height:4px; min-width:50px;">
-                                            <div class="progress-bar {% if item.remplissage > 85 %}bg-danger{% elif item.remplissage > 60 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ item.remplissage }}%;"></div>
-                                        </div>
-                                        <span style="font-size:11px; min-width:36px;">{{ item.remplissage|floatformat:1 }}%</span>
-                                    </div>
-                                </td>
+                            <tr>
+                                <td class="fw-bold">{{ item.date_label }}</td>
+                                <td class="text-end" style="color: var(--clr-success);">+{{ item.entrees|floatformat:0 }}</td>
+                                <td class="text-end" style="color: var(--clr-danger);">-{{ item.sorties|floatformat:0 }}</td>
+                                <td class="text-end fw-bold">{{ item.stock|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="6">
-                                    <div class="empty-state" style="padding:24px;">
-                                        <i class="fas fa-database d-block"></i>
-                                        <p>Aucune donnée</p>
-                                    </div>
-                                </td>
-                            </tr>
+                            <tr><td colspan="4" class="text-center text-muted py-4">Aucune donnee</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        
+        <!-- Previsions -->
         <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-database"></i>
-                    <span>Format Prophet (ds / y)</span>
+            <div class="section-card" style="margin-bottom: 0;">
+                <div class="sec-header">
+                    <h6><i class="fas fa-wand-magic-sparkles" style="color: #8b5cf6;"></i> Previsions (12 prochains mois)</h6>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                    <table class="table data-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Stock (y)</th>
+                                <th>Mois</th>
+                                <th class="text-center">Saison</th>
+                                <th class="text-end">Entrees</th>
+                                <th class="text-end">Sorties</th>
+                                <th class="text-end">Stock</th>
+                                <th class="text-center">Confiance</th>
+                                <th class="text-center">Risque</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for item in historique_prophet %}
-                            <tr>
-                                <td class="text-muted">{{ item.ds|date:"M Y" }}</td>
-                                <td class="fw-bold">{{ item.y|floatformat:0 }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="2">
-                                    <div class="empty-state" style="padding:24px;">
-                                        <i class="fas fa-database d-block"></i>
-                                        <p>Aucune donnée</p>
+                            {% for item in predictions_table %}
+                            <tr class="{% if item.risque == 'CRITIQUE' %}row-critique{% endif %}">
+                                <td class="fw-bold">{{ item.date_label }}</td>
+                                <td class="text-center"><span class="saison-badge saison-{{ item.saison }}">{{ item.saison }}</span></td>
+                                <td class="text-end" style="color: var(--clr-success);">+{{ item.entrees|floatformat:0 }}</td>
+                                <td class="text-end" style="color: var(--clr-danger);">-{{ item.sorties|floatformat:0 }}</td>
+                                <td class="text-end fw-bold">{{ item.stock|floatformat:0 }}</td>
+                                <td class="text-center">
+                                    <span style="font-size:.7rem;">{{ item.confiance }}%</span>
+                                    <div class="confiance-bar">
+                                        <div class="fill" style="width:{{ item.confiance }}%; background: {% if item.confiance > 70 %}var(--clr-success){% elif item.confiance > 55 %}var(--clr-warning){% else %}var(--clr-danger){% endif %};"></div>
                                     </div>
                                 </td>
+                                <td class="text-center"><span class="risk-badge risk-{{ item.risque }}">{{ item.risque }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center text-muted py-4">Aucune prevision</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVISIONS PAR ANNEE (tableaux) -->
+    {% if year_forecasts %}
+    <div class="section-card">
+        <div class="sec-header">
+            <h6><i class="fas fa-calendar-alt" style="color: var(--clr-accent);"></i> Previsions Annuelles Detaillees</h6>
+        </div>
+        <div class="sec-body">
+            {% for yf in year_forecasts %}
+            <div class="{% if not forloop.first %}year-section{% endif %}">
+                <h6><i class="fas fa-calendar me-1"></i> {{ yf.year }} &mdash;
+                    Stock moy: <strong>{{ yf.stock_moyen|floatformat:0 }} kg</strong> |
+                    Entrees: <strong style="color: var(--clr-success);">{{ yf.entrees_total|floatformat:0 }} kg</strong> |
+                    Sorties: <strong style="color: var(--clr-danger);">{{ yf.sorties_total|floatformat:0 }} kg</strong>
+                </h6>
+                <div class="table-responsive">
+                    <table class="table data-table">
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th class="text-center">Saison</th>
+                                <th class="text-end">Entrees</th>
+                                <th class="text-end">Sorties</th>
+                                <th class="text-end">Stock</th>
+                                <th class="text-end">Flux Net</th>
+                                <th class="text-center">Confiance</th>
+                                <th class="text-center">Risque</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in yf.data %}
+                            <tr class="{% if m.risque == 'CRITIQUE' %}row-critique{% endif %}">
+                                <td class="fw-bold">{{ m.date_label }}</td>
+                                <td class="text-center"><span class="saison-badge saison-{{ m.saison }}">{{ m.saison }}</span></td>
+                                <td class="text-end" style="color: var(--clr-success);">+{{ m.entrees|floatformat:0 }}</td>
+                                <td class="text-end" style="color: var(--clr-danger);">-{{ m.sorties|floatformat:0 }}</td>
+                                <td class="text-end fw-bold">{{ m.stock|floatformat:0 }}</td>
+                                <td class="text-end" style="color: {% if m.flux_net >= 0 %}var(--clr-success){% else %}var(--clr-danger){% endif %};">
+                                    {% if m.flux_net >= 0 %}+{% endif %}{{ m.flux_net|floatformat:0 }}
+                                </td>
+                                <td class="text-center"><span style="font-size:.7rem;">{{ m.confiance }}%</span></td>
+                                <td class="text-center"><span class="risk-badge risk-{{ m.risque }}">{{ m.risque }}</span></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SEUILS -->
+    <div class="section-card">
+        <div class="sec-header">
+            <h6><i class="fas fa-sliders" style="color: #8b5cf6;"></i> Seuils de Stock Configures</h6>
+        </div>
+        <div class="sec-body">
+            <div class="seuil-row">
+                <div class="seuil-item" style="border-left: 3px solid var(--clr-danger);">
+                    <div class="seuil-val" style="color: var(--clr-danger);">{{ seuil_min|floatformat:0 }}</div>
+                    <div class="seuil-lbl">Seuil Minimum</div>
+                </div>
+                <div class="seuil-item" style="border-left: 3px solid var(--clr-warning);">
+                    <div class="seuil-val" style="color: var(--clr-warning);">{{ seuil_alerte|floatformat:0 }}</div>
+                    <div class="seuil-lbl">Seuil Alerte</div>
+                </div>
+                <div class="seuil-item" style="border-left: 3px solid var(--clr-success);">
+                    <div class="seuil-val" style="color: var(--clr-success);">{{ seuil_optimal|floatformat:0 }}</div>
+                    <div class="seuil-lbl">Seuil Optimal</div>
+                </div>
+                <div class="seuil-item" style="border-left: 3px solid var(--clr-info);">
+                    <div class="seuil-val" style="color: var(--clr-info);">{{ capacite_max|floatformat:0 }}</div>
+                    <div class="seuil-lbl">Capacite Max</div>
                 </div>
             </div>
         </div>
@@ -275,4 +363,107 @@
 
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not no_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var historique = JSON.parse('{{ historique_json|escapejs }}');
+    var predictions = JSON.parse('{{ predictions_json|escapejs }}');
+
+    var SEUIL_MIN = {{ seuil_min }};
+    var SEUIL_ALERTE = {{ seuil_alerte }};
+    var SEUIL_OPTIMAL = {{ seuil_optimal }};
+
+    var C = {
+        accent: '#3b82f6', accentLight: 'rgba(59,130,246,.12)',
+        purple: '#8b5cf6', purpleLight: 'rgba(139,92,246,.12)',
+        success: '#10b981', danger: '#ef4444', warning: '#f59e0b',
+        dangerLight: 'rgba(239,68,68,.12)', warningLight: 'rgba(245,158,11,.12)',
+        successLight: 'rgba(16,185,129,.12)',
+    };
+
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#94a3b8';
+
+    // Donnees
+    var histLabels = historique.map(function(d) { return d.date_label; });
+    var histStock = historique.map(function(d) { return d.stock; });
+    var predLabels = predictions.map(function(d) { return d.date_label; });
+    var predStock = predictions.map(function(d) { return d.stock; });
+
+    var allLabels = histLabels.concat(predLabels);
+    var histData = histStock.concat(new Array(predLabels.length).fill(null));
+    var predData = new Array(histLabels.length - 1).fill(null);
+    predData.push(histStock[histStock.length - 1]);
+    predData = predData.concat(predStock);
+
+    new Chart(document.getElementById('chartStock'), {
+        type: 'line',
+        data: {
+            labels: allLabels,
+            datasets: [
+                {
+                    label: 'Stock Reel',
+                    data: histData,
+                    borderColor: C.accent, backgroundColor: C.accentLight,
+                    fill: true, tension: .4, borderWidth: 2,
+                    pointRadius: 3, pointBackgroundColor: C.accent,
+                },
+                {
+                    label: 'Stock Prevu',
+                    data: predData,
+                    borderColor: C.purple, backgroundColor: C.purpleLight,
+                    fill: true, tension: .4, borderWidth: 2,
+                    borderDash: [6, 3], pointRadius: 2,
+                    pointBackgroundColor: C.purple,
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true, padding: 14 } },
+                tooltip: {
+                    backgroundColor: '#0f172a', padding: 10, cornerRadius: 6,
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': ' + (ctx.parsed.y != null ? ctx.parsed.y.toLocaleString('fr-FR') : '-') + ' kg';
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        seuilMin: {
+                            type: 'line', yMin: SEUIL_MIN, yMax: SEUIL_MIN,
+                            borderColor: C.danger, borderWidth: 1.5, borderDash: [4, 4],
+                            label: { display: true, content: 'Min: ' + SEUIL_MIN, position: 'start', backgroundColor: C.dangerLight, color: C.danger, font: { size: 9 } }
+                        },
+                        seuilAlerte: {
+                            type: 'line', yMin: SEUIL_ALERTE, yMax: SEUIL_ALERTE,
+                            borderColor: C.warning, borderWidth: 1.5, borderDash: [4, 4],
+                            label: { display: true, content: 'Alerte: ' + SEUIL_ALERTE, position: 'start', backgroundColor: C.warningLight, color: C.warning, font: { size: 9 } }
+                        },
+                        seuilOptimal: {
+                            type: 'line', yMin: SEUIL_OPTIMAL, yMax: SEUIL_OPTIMAL,
+                            borderColor: C.success, borderWidth: 1.5, borderDash: [4, 4],
+                            label: { display: true, content: 'Optimal: ' + SEUIL_OPTIMAL, position: 'start', backgroundColor: C.successLight, color: C.success, font: { size: 9 } }
+                        },
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxRotation: 45, maxTicksLimit: 16 } },
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: function(v) { return v.toLocaleString('fr-FR') + ' kg'; } } }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
 {% endblock %}
